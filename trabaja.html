@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trabaja con Nosotros | Grupo Juditex</title>
+    
+    <!-- CSS Principal -->
+    <link rel="stylesheet" href="estilos.css">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+
+    <!-- ===== HEADER SIMPLE ===== -->
+    <header class="navbar">
+        <div class="nav-logo">
+            <a href="index.html" style="display: flex; align-items: center; gap: 15px; text-decoration: none;">
+                <img src="https://scontent.flim4-3.fna.fbcdn.net/v/t39.30808-6/494096880_1245754664217091_2619751831751021254_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=b895b5&_nc_ohc=am9P3p4OdJMQ7kNvwG7ZCBF&_nc_oc=Adr9e_mtR8dcOYGhDq36J7QDUmvsaNTH2XdZtRipPx0kpqSvd4mafP9ZV5eZz4jMvjI&_nc_zt=23&_nc_ht=scontent.flim4-3.fna&_nc_gid=zvWrVXmVAXQIxw1WDIlB6Q&_nc_ss=7a389&oh=00_Af3rRr8AMHnNcUYBaL_TwG4EQCuYxxriJ0xuhyU10TelcQ&oe=69E4D445" alt="Juditex Logo" onerror="this.src='https://via.placeholder.com/120x50/0d3b23/2ecc71?text=JUDITEX'">
+                <span style="color: white;"><i class="fas fa-leaf"></i> GRUPO JUDITEX</span>
+            </a>
+        </div>
+        <a href="index.html" class="back-home"><i class="fas fa-arrow-left"></i> Volver al inicio</a>
+    </header>
+
+    <!-- ===== FORMULARIO ===== -->
+    <main class="page-form">
+        <div class="form-container">
+            <div class="form-header">
+                <h1><i class="fas fa-briefcase"></i> Únete a Nuestro Equipo</h1>
+                <p>Completa el formulario y envíanos tu CV. ¡Queremos conocerte!</p>
+            </div>
+
+            <!-- ATENCIÓN: Reemplaza el ACTION con tu endpoint de FormSubmit real -->
+            <form action="https://formsubmit.co/almacen@grupojuditex.com" method="POST" enctype="multipart/form-data" id="jobForm">
+                
+                <!-- Configuración de FormSubmit -->
+                <input type="hidden" name="_subject" value="Nuevo Postulante - Grupo Juditex">
+                <input type="hidden" name="_captcha" value="false">
+                <input type="hidden" name="_template" value="table">
+                <!-- Redirige a una página de agradecimiento (puedes crear una simple html) -->
+                <input type="hidden" name="_next" value="https://www.juditex.com/gracias">
+
+                <!-- Campo: Cargo al que postula -->
+                <div class="form-group">
+                    <label for="cargo"><i class="fas fa-tag"></i> Cargo al que postulas</label>
+                    <input type="text" id="cargo" name="Cargo" placeholder="Ej: Supervisor Textil, Operario de Máquina..." required>
+                </div>
+
+                <!-- Campo: Nombre Completo -->
+                <div class="form-group">
+                    <label for="nombre"><i class="fas fa-user"></i> Nombre Completo</label>
+                    <input type="text" id="nombre" name="Nombre" placeholder="Nombres y Apellidos" required>
+                </div>
+
+                <!-- Fila: Email y Teléfono -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="email"><i class="fas fa-envelope"></i> Email</label>
+                        <input type="email" id="email" name="Email" placeholder="correo@ejemplo.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="telefono"><i class="fas fa-phone-alt"></i> Teléfono + Ext.</label>
+                        <input type="tel" id="telefono" name="Telefono" placeholder="+51 999 888 777" required>
+                    </div>
+                </div>
+
+                <!-- Fila: Ciudad y País -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="ciudad"><i class="fas fa-city"></i> Ciudad/Lugar</label>
+                        <input type="text" id="ciudad" name="Ciudad" placeholder="Lima, Arequipa..." required>
+                    </div>
+                    <div class="form-group">
+                        <label for="pais"><i class="fas fa-globe-americas"></i> País</label>
+                        <input type="text" id="pais" name="Pais" value="Perú" required>
+                    </div>
+                </div>
+
+                <!-- Fila: Especialidad y DNI -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="especialidad"><i class="fas fa-cogs"></i> Tu especialidad</label>
+                        <input type="text" id="especialidad" name="Especialidad" placeholder="Textil, Ventas, Logística..." required>
+                    </div>
+                    <div class="form-group">
+                        <label for="dni"><i class="fas fa-id-card"></i> N° DNI / CE / Pasaporte</label>
+                        <input type="text" id="dni" name="Documento" placeholder="Número de documento" required>
+                    </div>
+                </div>
+
+                <!-- Fila: Experiencia y Sexo -->
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="experiencia"><i class="fas fa-chart-line"></i> Años de experiencia</label>
+                        <select id="experiencia" name="Experiencia" required>
+                            <option value="" disabled selected>Selecciona...</option>
+                            <option value="Sin experiencia">Sin experiencia</option>
+                            <option value="1-2 años">1-2 años</option>
+                            <option value="3-5 años">3-5 años</option>
+                            <option value="Más de 5 años">Más de 5 años</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="sexo"><i class="fas fa-venus-mars"></i> Sexo</label>
+                        <select id="sexo" name="Sexo" required>
+                            <option value="" disabled selected>Selecciona...</option>
+                            <option value="Femenino">Femenino</option>
+                            <option value="Masculino">Masculino</option>
+                            <option value="Prefiero no decirlo">Prefiero no decirlo</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Campo: Subir CV -->
+                <div class="form-group">
+                    <label for="cv"><i class="fas fa-file-pdf"></i> Subir su CV (PDF o Word)</label>
+                    <input type="file" id="cv" name="CV" accept=".pdf,.doc,.docx" required>
+                    <small>Tamaño máximo recomendado: 5MB</small>
+                </div>
+
+                <!-- Botón Verificar Archivo -->
+                <div class="form-group">
+                    <button type="button" id="verificarBtn" class="btn-verify"><i class="fas fa-check-circle"></i> Verificar que su archivo ha sido subido correctamente</button>
+                    <p id="fileStatus" class="file-status"></p>
+                </div>
+
+                <!-- Campo: Carta de presentación -->
+                <div class="form-group">
+                    <label for="carta"><i class="fas fa-pen-fancy"></i> Carta de presentación (Opcional)</label>
+                    <textarea id="carta" name="Carta_Presentacion" rows="5" placeholder="Cuéntanos brevemente por qué te gustaría trabajar con nosotros..."></textarea>
+                </div>
+
+                <!-- Checkbox de Privacidad -->
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" id="privacidad" name="Privacidad" value="Aceptada" required>
+                    <label for="privacidad">He leído y acepto la <a href="#" id="openPrivacy">Política de Privacidad</a> y el tratamiento de mis datos personales.</label>
+                </div>
+
+                <!-- Checkbox de Excepciones (Ejemplo: Antecedentes) -->
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" id="excepciones" name="Excepciones" value="Aceptada" required>
+                    <label for="excepciones">Declaro que no tengo impedimentos legales ni antecedentes penales/judiciales para laborar.</label>
+                </div>
+
+                <button type="submit" class="btn-submit"><i class="fas fa-paper-plane"></i> Enviar Postulación</button>
+            </form>
+        </div>
+    </main>
+
+    <!-- Modal de Política de Privacidad (Oculto por defecto) -->
+    <div id="privacyModal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Política de Privacidad</h2>
+            <p>En Grupo Juditex, respetamos su privacidad. Los datos recopilados en este formulario serán utilizados exclusivamente para el proceso de selección de personal y serán almacenados en nuestra base de datos de RRHH por un máximo de 12 meses.</p>
+            <p>Usted tiene derecho a acceder, rectificar o cancelar sus datos enviando un correo a <strong>rrhh@grupojuditex.com</strong>.</p>
+            <p>Al enviar este formulario, usted acepta el envío de su información a través de servicios de terceros (FormSubmit) para llegar al correo de nuestra área de selección.</p>
+        </div>
+    </div>
+
+    <footer class="footer" style="margin-top: 0;">
+        <p><i class="far fa-copyright"></i> 2024 Grupo Juditex - Proceso de Selección</p>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="scripts.js"></script>
+</body>
+</html>
