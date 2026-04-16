@@ -3,73 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grupo Juditex | 30 Años de Excelencia Textil</title>
+    <title>Grupo Juditex | Venta de Telas por Mayor - Denim, Drill, Popelina</title>
+    <meta name="description" content="Grupo Juditex - 30 años vendiendo telas por mayor: Denim, Drill, PPT Crudo, Popelina. ¡Delivery a tu taller!">
+    <meta name="keywords" content="telas, denim, drill, popelina, venta de telas por mayor, juditex">
     
-    <!-- CSS Principal -->
-    <link rel="stylesheet" href="estilos.css">
-    <!-- Font Awesome -->
+    <link rel="stylesheet" href="index.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 </head>
 <body>
 
-    <!-- ===== HEADER / MENÚ DE NAVEGACIÓN ===== -->
     <header class="navbar">
         <div class="nav-logo">
             <img src="https://scontent.flim4-3.fna.fbcdn.net/v/t39.30808-6/494096880_1245754664217091_2619751831751021254_n.jpg?_nc_cat=106&ccb=1-7&_nc_sid=b895b5&_nc_ohc=am9P3p4OdJMQ7kNvwG7ZCBF&_nc_oc=Adr9e_mtR8dcOYGhDq36J7QDUmvsaNTH2XdZtRipPx0kpqSvd4mafP9ZV5eZz4jMvjI&_nc_zt=23&_nc_ht=scontent.flim4-3.fna&_nc_gid=zvWrVXmVAXQIxw1WDIlB6Q&_nc_ss=7a389&oh=00_Af3rRr8AMHnNcUYBaL_TwG4EQCuYxxriJ0xuhyU10TelcQ&oe=69E4D445" alt="Juditex Logo" onerror="this.src='https://via.placeholder.com/120x50/0d3b23/2ecc71?text=JUDITEX'">
             <span><i class="fas fa-leaf"></i> GRUPO JUDITEX</span>
         </div>
-        
         <nav>
             <ul class="nav-menu" id="navMenu">
-                <li><a href="#inicio"><i class="fas fa-home"></i> Inicio</a></li>
-                <li><a href="#nosotros"><i class="fas fa-users"></i> Nosotros</a></li>
-                <li><a href="#productos"><i class="fas fa-tshirt"></i> Productos</a></li>
-                <li><a href="#videos"><i class="fab fa-youtube"></i> Videos</a></li>
-                <li><a href="#contacto"><i class="fas fa-phone"></i> Contacto</a></li>
+                <li><a href="index.html"><i class="fas fa-home"></i> Inicio</a></li>
+                <li><a href="index.html#nosotros"><i class="fas fa-users"></i> Nosotros</a></li>
+                <li><a href="productos.html"><i class="fas fa-tshirt"></i> Productos</a></li>
+                <li><a href="index.html#ubicacion"><i class="fas fa-map-pin"></i> Ubicación</a></li>
+                <li><a href="contactanos.html"><i class="fas fa-phone"></i> Contáctanos</a></li>
                 <li><a href="trabaja.html" class="btn-work-nav"><i class="fas fa-briefcase"></i> Trabaja con nosotros</a></li>
             </ul>
         </nav>
-        
         <div class="menu-toggle" id="menuToggle">
             <i class="fas fa-bars"></i>
         </div>
     </header>
 
-    <!-- ===== CONTENIDO PRINCIPAL ===== -->
     <main>
-        <!-- Hero Section -->
         <section id="inicio" class="hero">
+            <div class="hero-particles">
+                <span></span><span></span><span></span><span></span><span></span>
+                <span></span><span></span><span></span><span></span><span></span>
+            </div>
             <div class="hero-content">
                 <div class="years-badge">
                     <i class="fas fa-calendar-check"></i> 30 AÑOS DE EXPERIENCIA
                 </div>
-                <h1>Líderes en <span>Telas</span> de Alta Calidad</h1>
-                <p>Desde 1994, Grupo Juditex ofrece las mejores telas para confección, hogar e industria textil. Calidad garantizada y servicio personalizado.</p>
+                <h1><span>Denim, Drill, PPT, Popelina</span> y más al por mayor</h1>
+                <p>Desde 1994 llevamos la mejor calidad en telas crudas y acabadas directo a tu taller. <strong>¡Delivery inmediato!</strong></p>
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <span class="stat-number">30</span>
+                        <span class="stat-label">Años Líderes</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">100k+</span>
+                        <span class="stat-label">Metros en Stock</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">24/7</span>
+                        <span class="stat-label">Atención</span>
+                    </div>
+                </div>
                 <div class="hero-buttons">
-                    <a href="#contacto" class="btn-primary"><i class="fas fa-headset"></i> Contáctanos Ahora</a>
-                    <a href="trabaja.html" class="btn-secondary"><i class="fas fa-briefcase"></i> Únete al equipo</a>
+                    <a href="productos.html" class="btn-primary"><i class="fas fa-box-open"></i> Ver Productos</a>
+                    <a href="contactanos.html" class="btn-secondary"><i class="fas fa-truck"></i> Pedir Delivery</a>
                 </div>
             </div>
             <div class="hero-image">
-                <img src="https://lh3.googleusercontent.com/p/AF1QipPf27Y8NqTSgUj5iOsO73VYQ3vCGpJZauK2dncy=s1360-w1360-h1020-rw" alt="Telas de Calidad" onerror="this.src='https://via.placeholder.com/500x350/1a5c34/2ecc71?text=Telas+Premium'">
+                <div class="image-wrapper">
+                    <img src="https://lh3.googleusercontent.com/p/AF1QipPf27Y8NqTSgUj5iOsO73VYQ3vCGpJZauK2dncy=s1360-w1360-h1020-rw" alt="Telas de Calidad" onerror="this.src='https://via.placeholder.com/600x450/1a5c34/2ecc71?text=Telas+Premium'">
+                    <div class="image-badge">
+                        <i class="fas fa-medal"></i> Calidad Garantizada
+                    </div>
+                </div>
             </div>
         </section>
 
-        <!-- Sección Nosotros -->
         <section id="nosotros" class="about">
             <div class="section-title">
-                <h2><i class="fas fa-building"></i> Nuestra Historia</h2>
-                <p>Más de tres décadas vistiendo al Perú y el mundo</p>
+                <span class="section-subtitle">Quiénes Somos</span>
+                <h2><i class="fas fa-building"></i> Líderes en Denim, Drill y Popelina</h2>
+                <p>Grupo Juditex es una empresa 100% peruana con 30 años de experiencia en el mercado textil.</p>
             </div>
             <div class="about-content">
                 <div class="about-text">
-                    <h3>30 Años de Trayectoria Textil</h3>
-                    <p><strong>Grupo Juditex</strong> nació en 1994 con la visión de convertirse en el proveedor líder de telas de alta calidad en el mercado peruano...</p>
-                    <p>Nuestro compromiso con la excelencia nos ha permitido crecer sostenidamente...</p>
+                    <h3>Calidad y Precio Justo</h3>
+                    <p><strong>Grupo Juditex</strong> es una empresa SÓLIDA, DE CONFIANZA Y GARANTÍA. Nos especializamos en la venta de telas por mayor para la industria de la moda y ropa industrial.</p>
+                    <p>Trabajamos con procesos de atención transparentes, tiempos definidos y llevamos el producto directo a tu taller.</p>
                     <ul class="about-list">
-                        <li><i class="fas fa-check-circle"></i> Más de 500 clientes satisfechos</li>
-                        <li><i class="fas fa-check-circle"></i> Stock permanente de 100,000+ metros</li>
-                        <li><i class="fas fa-check-circle"></i> Asesoría personalizada sin costo</li>
+                        <li><i class="fas fa-check-circle"></i> Especialistas en Denim, Drill, PPT Crudo y Popelina</li>
+                        <li><i class="fas fa-check-circle"></i> Delivery directo a tu taller o negocio</li>
+                        <li><i class="fas fa-check-circle"></i> Stock permanente y precios mayoristas</li>
                     </ul>
                 </div>
                 <div class="about-image">
@@ -78,91 +98,187 @@
             </div>
         </section>
 
-        <!-- Sección Productos -->
         <section id="productos" class="products">
             <div class="section-title">
-                <h2><i class="fas fa-tshirt"></i> Nuestros Productos</h2>
-                <p>Variedad de telas para cada necesidad</p>
+                <span class="section-subtitle">Catálogo</span>
+                <h2><i class="fas fa-tshirt"></i> Nuestras Telas</h2>
+                <p>Descubre la variedad que tenemos para ti</p>
             </div>
             <div class="products-grid">
-                <!-- Tarjetas de productos (mantenidas del original) -->
-                <div class="product-card">...</div>
-                <div class="product-card">...</div>
-                <div class="product-card">...</div>
-                <div class="product-card">...</div>
+                <div class="product-card">
+                    <div class="product-badge">Más Vendido</div>
+                    <img src="https://th.bing.com/th/id/R.272f3e63e053cc521130dd27c26ee2be?rik=zSKv6b9S%2fZfmng&pid=ImgRaw&r=0" alt="Tela Denim" onerror="this.src='https://via.placeholder.com/350x250/0d3b23/2ecc71?text=DENIM'">
+                    <div class="product-info">
+                        <h4><i class="fas fa-circle"></i> Denim</h4>
+                        <p>Denim clásico, moda e industrial. Ideal para jeans, chaquetas y overoles. Alta resistencia.</p>
+                        <div class="product-tags">
+                            <span>8-14 Onzas</span>
+                            <span>Crudo</span>
+                            <span>Índigo</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="product-card">
+                    <div class="product-badge" style="background: #3498db;">Novedad</div>
+                    <img src="https://isteam.wsimg.com/ip/d0e751c0-72cb-4dd0-9954-083476230670/IMAGEN%20DRILL%20TWILL.jpg/:/cr=t:7.19%25,l:0%25,w:100%25,h:44.25%25/rs=h:650,cg:true" alt="Tela Drill" onerror="this.src='https://via.placeholder.com/350x250/0d3b23/2ecc71?text=DRILL'">
+                    <div class="product-info">
+                        <h4><i class="fas fa-circle"></i> Drill</h4>
+                        <p>Drill para pantalones, uniformes escolares e industriales. Disponible en crudo y colores.</p>
+                        <div class="product-tags">
+                            <span>PPT Crudo</span>
+                            <span>Antifluido</span>
+                            <span>Industrial</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="product-card">
+                    <img src="https://ae01.alicdn.com/kf/HTB16FdCMpXXXXcMXVXXq6xXFXXXo/Tela-de-algod-n-de-popelina-para-Costura-paquete-de-Telas-de-popelina-de-50x150cm-en.jpg" alt="Popelina">
+                    <div class="product-info">
+                        <h4><i class="fas fa-circle"></i> Popelina</h4>
+                        <p>Suave, fresca y versátil. Perfecta para camisas, blusas y ropa de verano, bolsilleros. color blanco y negro.</p>
+                        <div class="product-tags">
+                            <span>Algodón</span>
+                            <span>Estampada</span>
+                            <span>Lisa</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="product-card">
+                    <img src="https://images.pexels.com/photos/2523949/pexels-photo-2523949.jpeg?auto=compress&cs=tinysrgb&w=600" alt="Tela Tocuyo" onerror="this.src='https://via.placeholder.com/350x250/0d3b23/2ecc71?text=TOCUYO'">
+                    <div class="product-info">
+                        <h4><i class="fas fa-circle"></i> Tocuyo y Básicos</h4>
+                        <p>Tocuyo crudo y blanqueado. Ideal para forrería, manualidades y usos industriales.</p>
+                        <div class="product-tags">
+                            <span>Crudo</span>
+                            <span>Blanqueado</span>
+                            <span>Económico</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 50px;">
+                <a href="contactanos.html" class="btn-primary"><i class="fab fa-whatsapp"></i> Consultar Precios por Mayor</a>
             </div>
         </section>
 
-        <!-- Sección Videos -->
-        <section id="videos" class="videos">...</section>
+        <section id="ubicacion" class="location">
+            <div class="section-title">
+                <span class="section-subtitle">Visítanos</span>
+                <h2><i class="fas fa-map-pin"></i> Estamos en el Corazón Textil</h2>
+                <p>Coordenadas: -12.073902609540642, -77.01528576098302 (Cercado de Lima)</p>
+            </div>
+            <div class="location-grid">
+                <div class="location-info">
+                    <h3><i class="fas fa-store"></i> Nuestro Showroom</h3>
+                    <p>Ven a nuestro local principal y descubre la calidad de nuestras telas.</p>
+                    <ul>
+                        <li><i class="fas fa-map-marked-alt"></i> <strong>Dirección:</strong> JR. IGNACIO COSSIO NRO. 1363 URB. AVENIDA MÉXICO (UBICADO FRENTE A UN PARQUE) LIMA - LIMA - LA VICTORIA</li>
+                        <li><i class="fas fa-clock"></i> <strong>Horario:</strong> Lunes a Viernes 8:00 am - 6:00 pm | Sábados 9:00 am - 1:00 pm</li>
+                        <li><i class="fas fa-truck"></i> <strong>Delivery:</strong> Llevamos tu pedido a cualquier taller en Lima Metropolitana.</li>
+                    </ul>
+                    <a href="contactanos.html" class="btn-primary"><i class="fab fa-whatsapp"></i> Coordinar Visita</a>
+                </div>
+                <div class="location-map">
+                    <div id="map"></div>
+                </div>
+            </div>
+        </section>
 
-        <!-- Sección Contacto -->
         <section id="contacto" class="contact">
             <div class="section-title">
-                <h2><i class="fas fa-address-card"></i> Contacto</h2>
-                <p>Estamos aquí para ayudarte</p>
+                <span class="section-subtitle" style="color: #a8e6a8;">Contáctanos</span>
+                <h2><i class="fas fa-truck"></i> Pedidos y Delivery</h2>
+                <p>Te asesoramos y llevamos tu pedido a la puerta de tu taller</p>
             </div>
             <div class="contact-grid">
-                <!-- Soporte Técnico -->
                 <div class="contact-card">
                     <div class="contact-icon"><i class="fas fa-headset"></i></div>
-                    <h3>Soporte Técnico</h3>
+                    <h3>Soporte y Ventas</h3>
                     <div class="contact-info">
-                        <!-- WhatsApp Link -->
                         <a href="https://wa.me/51970855278" target="_blank" class="contact-number">
                             <i class="fab fa-whatsapp"></i> +51 970 855 278
                         </a>
-                        <a href="mailto:paulcalebfs123@gmail.com"><i class="fas fa-envelope"></i> paulcalebfs123@gmail.com</a>
-                        <br><br>
-                        <small><i class="far fa-clock"></i> Lun-Vie 8am-6pm</small>
+                        <a href="mailto:ventas@grupojuditex.com">
+                            <i class="fas fa-envelope"></i> ventas@grupojuditex.com
+                        </a>
+                        <p style="margin-top: 15px;">
+                            <i class="far fa-clock"></i> Lun-Vie: 8:00 am - 6:00 pm<br>
+                            <i class="far fa-clock"></i> Sábados: 9:00 am - 1:00 pm
+                        </p>
                     </div>
                 </div>
-                <!-- Ventas -->
                 <div class="contact-card">
-                    <div class="contact-icon"><i class="fas fa-phone-alt"></i></div>
-                    <h3>Ventas</h3>
+                    <div class="contact-icon"><i class="fas fa-shopping-cart"></i></div>
+                    <h3>Cotizaciones</h3>
                     <div class="contact-info">
                         <a href="https://wa.me/51998267487" target="_blank" class="contact-number">
                             <i class="fab fa-whatsapp"></i> +51 998 267 487
                         </a>
-                        <a href="mailto:gerenciacomercial@grupojuditex.com"><i class="fas fa-envelope"></i> gerenciacomercial@grupojuditex.com</a>
-                        <br><br>
-                        <a href="https://wa.me/51998389802" target="_blank" class="contact-number">
-                            <i class="fab fa-whatsapp"></i> +51 998 389 802
+                        <a href="mailto:gerenciacomercial@grupojuditex.com">
+                            <i class="fas fa-envelope"></i> gerenciacomercial@grupojuditex.com
                         </a>
-                        <a href="mailto:ventas@grupojuditex.com"><i class="fas fa-envelope"></i> ventas@grupojuditex.com</a>
                     </div>
                 </div>
             </div>
         </section>
     </main>
 
-    <!-- ===== FOOTER ===== -->
     <footer class="footer">
-        <!-- Sección de referencia movida aquí -->
-        <div class="footer-reference">
-            <a href="https://www.juditex.com/" target="_blank" class="reference-link">
-                <i class="fas fa-globe"></i> Visita Nuestra Web Oficial: www.juditex.com
-                <i class="fas fa-external-link-alt"></i>
-            </a>
+        <div class="footer-content">
+            <div class="footer-section">
+                <div class="footer-logo">
+                    <i class="fas fa-leaf"></i>
+                    <span>GRUPO JUDITEX</span>
+                </div>
+                <p>30 años vistiendo al Perú con telas de calidad. Especialistas en Denim, Drill y Popelina.</p>
+                <div class="footer-social">
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
+                    <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-tiktok"></i></a>
+                    <a href="https://wa.me/51970855278" target="_blank"><i class="fab fa-whatsapp"></i></a>
+                </div>
+            </div>
+            <div class="footer-section">
+                <h4>Enlaces Rápidos</h4>
+                <ul>
+                    <li><a href="index.html"><i class="fas fa-chevron-right"></i> Inicio</a></li>
+                    <li><a href="index.html#nosotros"><i class="fas fa-chevron-right"></i> Nosotros</a></li>
+                    <li><a href="productos.html"><i class="fas fa-chevron-right"></i> Productos</a></li>
+                    <li><a href="index.html#ubicacion"><i class="fas fa-chevron-right"></i> Ubicación</a></li>
+                    <li><a href="contactanos.html"><i class="fas fa-chevron-right"></i> Contáctanos</a></li>
+                </ul>
+            </div>
+            <div class="footer-section">
+                <h4>Productos Estrella</h4>
+                <ul>
+                    <li><a href="productos.html">Denim 8-14 Onzas</a></li>
+                    <li><a href="productos.html">Drill / PPT Crudo</a></li>
+                    <li><a href="productos.html">Popelina Estampada</a></li>
+                    <li><a href="productos.html">Tocuyo Básico</a></li>
+                </ul>
+            </div>
         </div>
-        
-        <p><i class="far fa-copyright"></i> 2024 Grupo Juditex - 30 Años de Excelencia Textil</p>
-        <p>Todos los derechos reservados | Desarrollado para Soporte Interno v1.0</p>
-        
-        <p style="margin-top: 15px;">
-            <a href="#" style="color: #2ecc71; margin: 0 10px;"><i class="fab fa-facebook"></i></a>
-            <a href="#" style="color: #2ecc71; margin: 0 10px;"><i class="fab fa-instagram"></i></a>
-            <a href="#" style="color: #2ecc71; margin: 0 10px;"><i class="fab fa-youtube"></i></a>
-            <a href="#" style="color: #2ecc71; margin: 0 10px;"><i class="fab fa-whatsapp"></i></a>
-        </p>
-        
-        <div class="footer-links">
-            <a href="trabaja-con-nosotros.html" class="btn-work-footer"><i class="fas fa-briefcase"></i> Trabaja con nosotros</a>
+        <div class="footer-bottom">
+            <p><i class="far fa-copyright"></i> 2024 Grupo Juditex - 30 Años de Excelencia Textil. Todos los derechos reservados.</p>
         </div>
     </footer>
 
-    <!-- JavaScript Principal -->
+    <a href="https://wa.me/51970855278" target="_blank" class="whatsapp-float">
+        <i class="fab fa-whatsapp"></i>
+        <span class="whatsapp-tooltip">¡Pide tu delivery aquí!</span>
+    </a>
+
     <script src="scripts.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var map = L.map('map').setView([-12.073902609540642, -77.01528576098302], 17);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+            }).addTo(map);
+            var marker = L.marker([-12.073902609540642, -77.01528576098302]).addTo(map);
+            marker.bindPopup("<b>Grupo Juditex</b><br>Venta de Telas por Mayor.<br>¡Delivery a tu taller!").openPopup();
+        });
+    </script>
 </body>
 </html>
