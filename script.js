@@ -1482,20 +1482,3 @@ function esDispositivoMovil() {
     return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 }
 
-// Modificar la función imprimir()
-function imprimir() {
-    if (lista.length === 0) { 
-        mostrarError('Agregue al menos un articulo'); 
-        return; 
-    }
-    
-    if (esDispositivoMovil()) {
-        if (confirm('En celulares se recomienda usar "GENERAR PDF" para mantener el formato correcto. ¿Desea generar PDF en lugar de imprimir?')) {
-            generarPDF();
-            return;
-        }
-    }
-    
-    prepararImpresion();
-    window.print();
-}
