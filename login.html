@@ -222,6 +222,72 @@
             margin-right: 5px;
         }
 
+        /* Modal de confirmacion de salida */
+        .modal-confirm-exit {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            display: none;
+        }
+
+        .modal-confirm-exit-content {
+            background: white;
+            padding: 25px 30px;
+            border-radius: 12px;
+            max-width: 350px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .modal-confirm-exit-content h3 {
+            color: #1a5c34;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .modal-confirm-exit-content p {
+            color: #4b5563;
+            margin-bottom: 20px;
+        }
+
+        .modal-confirm-exit-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .modal-confirm-exit-buttons button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+
+        .btn-exit-cancel {
+            background: #6b7280;
+            color: white;
+        }
+
+        .btn-exit-confirm {
+            background: #dc2626;
+            color: white;
+        }
+
+        .btn-exit-cancel:hover, .btn-exit-confirm:hover {
+            transform: translateY(-1px);
+            filter: brightness(0.9);
+        }
+
         @media (max-width: 480px) {
             .login-card {
                 padding: 30px 20px;
@@ -284,7 +350,32 @@
     </div>
 
     <script>
-        // USUARIOS VALIDADOS (solo estos pueden acceder)
+        // ================= PROTECCION: LIMPIAR HISTORIAL AL CARGAR LOGIN =================
+        // Esto evita que se pueda usar el boton "Adelante" despues de cerrar sesion
+        (function() {
+            // Reemplazar el estado actual para que no haya historial hacia adelante
+            if (window.history && window.history.pushState) {
+                // Limpiar cualquier estado futuro
+                history.pushState(null, null, location.href);
+                window.addEventListener('popstate', function() {
+                    // Cuando intenta retroceder, lo mantenemos en login
+                    history.pushState(null, null, location.href);
+                });
+            }
+            
+            // Si hay una sesion previa en otra pestaña, limpiarla al cargar login
+            // (excepto si viene de un logout legitimo que ya limpio)
+            const fromLogout = sessionStorage.getItem('fromLogout');
+            if (fromLogout === 'true') {
+                sessionStorage.removeItem('fromLogout');
+                // Asegurar que no quede sesion
+                sessionStorage.removeItem('loggedIn');
+                sessionStorage.removeItem('username');
+                sessionStorage.removeItem('loginTime');
+            }
+        })();
+
+        // ================= USUARIOS VALIDADOS =================
         const USERS = [
             { username: "admin", password: "1234" },
             { username: "juditex", password: "telas2024" },
@@ -365,8 +456,8 @@
                 sessionStorage.setItem('username', username);
                 sessionStorage.setItem('loginTime', new Date().getTime());
                 
-                // Redirigir a packing.html
-                window.location.href = 'packing.html';
+                // Redirigir a packing.html (reemplazando el historial para no poder volver)
+                window.location.replace('packing.html');
             } else {
                 // LOGIN FALLIDO
                 errorMessage.style.display = 'block';

@@ -3,35 +3,132 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Packing List | Sistema Textil</title>
+    <title>Packing List | Grupo Juditex</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     
     <link rel="stylesheet" href="styles.css">
 </head>
+<body>
+
 <script>
     // VERIFICACION DE SEGURIDAD - Redirigir a login si no hay sesion activa
     (function() {
         const loggedIn = sessionStorage.getItem('loggedIn');
         const loginTime = sessionStorage.getItem('loginTime');
         
-        // Si no hay sesion o la sesion tiene mas de 8 horas (28800000 ms)
         if (!loggedIn || !loginTime || (new Date().getTime() - parseInt(loginTime)) > 28800000) {
-            // Limpiar sesion por seguridad
             sessionStorage.removeItem('loggedIn');
             sessionStorage.removeItem('username');
             sessionStorage.removeItem('loginTime');
-            // Redirigir al login
             window.location.href = 'login.html';
         }
     })();
 </script>
-<body>
+
+<script>
+    // ================= PROTECCION DE RETROCESO Y SALIDA =================
+    (function() {
+        // Prevenir que el usuario use el boton "Atras" del navegador
+        history.pushState(null, null, location.href);
+        window.addEventListener('popstate', function() {
+            mostrarModalSalir();
+        });
+        
+        // Variable para controlar si se debe mostrar confirmacion al salir
+        let puedeSalir = false;
+        
+        window.mostrarModalSalir = function() {
+            document.getElementById('modalSalir').style.display = 'flex';
+        };
+        
+        window.confirmarSalida = function() {
+            puedeSalir = true;
+            sessionStorage.setItem('fromLogout', 'true');
+            sessionStorage.removeItem('loggedIn');
+            sessionStorage.removeItem('username');
+            sessionStorage.removeItem('loginTime');
+            window.location.replace('login.html');
+        };
+        
+        window.cancelarSalida = function() {
+            document.getElementById('modalSalir').style.display = 'none';
+            history.pushState(null, null, location.href);
+        };
+        
+        // Detectar cuando el usuario intenta cerrar la pestaña o navegar fuera
+        window.addEventListener('beforeunload', function(e) {
+            if (!puedeSalir && sessionStorage.getItem('loggedIn') === 'true') {
+                e.preventDefault();
+                e.returnValue = '';
+                return '';
+            }
+        });
+        
+        // ================= DETECCION DE INACTIVIDAD =================
+        let tiempoInactividad;
+        const TIEMPO_INACTIVIDAD = 300000; // 5 minutos (300000 ms)
+        let modalInactividadMostrado = false;
+        let countdownInterval;
+        let segundosRestantes = 30;
+        
+        function resetearTiempoInactividad() {
+            clearTimeout(tiempoInactividad);
+            clearInterval(countdownInterval);
+            if (modalInactividadMostrado) {
+                document.getElementById('modalInactividad').style.display = 'none';
+                modalInactividadMostrado = false;
+            }
+            segundosRestantes = 30;
+            
+            tiempoInactividad = setTimeout(function() {
+                mostrarModalInactividad();
+            }, TIEMPO_INACTIVIDAD);
+        }
+        
+        function mostrarModalInactividad() {
+            if (sessionStorage.getItem('loggedIn') !== 'true') return;
+            
+            document.getElementById('modalInactividad').style.display = 'flex';
+            modalInactividadMostrado = true;
+            document.getElementById('inactividadCountdown').textContent = segundosRestantes;
+            
+            countdownInterval = setInterval(function() {
+                segundosRestantes--;
+                document.getElementById('inactividadCountdown').textContent = segundosRestantes;
+                
+                if (segundosRestantes <= 0) {
+                    clearInterval(countdownInterval);
+                    sessionStorage.setItem('fromLogout', 'true');
+                    sessionStorage.removeItem('loggedIn');
+                    sessionStorage.removeItem('username');
+                    sessionStorage.removeItem('loginTime');
+                    window.location.replace('login.html');
+                }
+            }, 1000);
+        }
+        
+        window.continuarSesion = function() {
+            clearInterval(countdownInterval);
+            document.getElementById('modalInactividad').style.display = 'none';
+            modalInactividadMostrado = false;
+            segundosRestantes = 30;
+            resetearTiempoInactividad();
+        };
+        
+        // Eventos que resetean el temporizador de inactividad
+        ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click', 'keypress'].forEach(function(evento) {
+            document.addEventListener(evento, resetearTiempoInactividad);
+        });
+        
+        resetearTiempoInactividad();
+    })();
+</script>
 
 <main id="formulario" class="form-container">
     <div class="card">
         <header class="form-header">
-            <h1>PACKING LIST</h1>
+            <h1>PACKING LIST JUDITEX</h1>
             
             <div class="instrucciones">
                 <div class="instruccion-titulo">INSTRUCCIONES DE USO</div>
@@ -39,22 +136,23 @@
                     <div>1. Seleccione o busque un CLIENTE</div>
                     <div>2. Seleccione un VENDEDOR</div>
                     <div>3. Busque o seleccione un ARTICULO</div>
-                    <div>4. Ingrese CANTIDAD (metros) y presione ENTER</div>
-                    <div>5. Para finalizar un articulo, presione 0 en cantidad</div>
-                    <div>6. Maximo 6 articulos por packing list</div>
+                    <div>4. Opcional: escriba una PRENDA</div>
+                    <div>5. Ingrese CANTIDAD (metros) y presione ENTER</div>
+                    <div>6. Para finalizar un articulo, presione 0 en cantidad</div>
+                    <div>7. Maximo 6 articulos por packing list</div>
                 </div>
             </div>
         </header>
         
         <div class="form-grid">
-            <!-- CLIENTE - BUSCADOR TIPO SELECT -->
+            <!-- CLIENTE - BUSCADOR -->
             <div class="input-group">
                 <label for="clienteInput">CLIENTE</label>
-                <input type="text" id="clienteInput" placeholder="Escriba para buscar cliente..." autocomplete="off">
+                <input type="text" id="clienteInput" placeholder="Escriba para buscar cliente..." autocomplete="off" style="text-transform: uppercase;">
                 <div id="clienteSugerencias" class="sugerencias"></div>
             </div>
             
-            <!-- VENDEDOR - SELECT NORMAL -->
+            <!-- VENDEDOR - SELECT -->
             <div class="input-group">
                 <label for="vendedorSelect">VENDEDOR</label>
                 <select id="vendedorSelect">
@@ -66,39 +164,25 @@
                 </select>
             </div>
             
-            <!-- ARTICULO - BUSCADOR TIPO SELECT -->
+            <!-- ARTICULO - BUSCADOR -->
             <div class="input-group">
                 <label for="articuloInput">ARTICULO</label>
-                <input type="text" id="articuloInput" placeholder="Escriba para buscar articulo..." autocomplete="off">
+                <input type="text" id="articuloInput" placeholder="Escriba para buscar articulo..." autocomplete="off" style="text-transform: uppercase;">
                 <div id="articuloSugerencias" class="sugerencias"></div>
                 <input type="hidden" id="codigoArticuloHidden" value="">
                 <input type="hidden" id="empresaArticuloHidden" value="">
+            </div>
+            
+            <!-- PRENDA - CAMPO TEXTO LIBRE -->
+            <div class="input-group">
+                <label for="prendaInput">PRENDA (opcional)</label>
+                <input type="text" id="prendaInput" placeholder="Ej: PANTALON, CAMISA, CHAQUETA" autocomplete="off" style="text-transform: uppercase;">
             </div>
             
             <div class="input-group">
                 <label for="cantidadInput">CANTIDAD (metros)</label>
                 <input type="number" id="cantidadInput" step="0.01" min="0.01" placeholder="0.00" max="999">
                 <div class="input-ayuda">Presione 0 para finalizar el articulo actual</div>
-            </div>
-        </div>
-        
-        <!-- CAMPO PRENDA (toggle + inputs) -->
-        <div class="prenda-container">
-            <label class="prenda-toggle">
-                <input type="checkbox" id="prendaToggle">
-                <span class="prenda-toggle-label">AGREGAR PRENDA / REFERENCIA</span>
-            </label>
-            <div id="prendaCampos" class="prenda-campos" style="display: none;">
-                <div class="prenda-row">
-                    <div class="input-group mini">
-                        <label for="prendaTexto">TEXTO</label>
-                        <input type="text" id="prendaTexto" placeholder="Ej: PANTALON, CAMISA, CHAQUETA">
-                    </div>
-                    <div class="input-group mini">
-                        <label for="prendaNumeros">NUMEROS</label>
-                        <input type="text" id="prendaNumeros" placeholder="Ej: S, M, L, 28, 30, 32">
-                    </div>
-                </div>
             </div>
         </div>
         
@@ -153,12 +237,13 @@
         <div class="button-group">
             <button type="button" class="btn btn-primary" id="btnAgregar">AGREGAR (ENTER)</button>
             <button type="button" class="btn btn-secondary" id="btnLimpiar">NUEVA LISTA</button>
-            <button type="button" class="btn btn-pdf" id="btnPDF">GUARDAR PDF</button>
-            <button type="button" class="btn btn-print" id="btnImprimir">IMPRIMIR</button>
+            <button type="button" class="btn btn-success" id="btnGrabar" style="background: #1a5c34;">GRABAR</button>
+            <button type="button" class="btn btn-danger" id="btnSalir" style="background: #dc2626;">SALIR</button>
         </div>
     </div>
 </main>
 
+<!-- AREA DE IMPRESION -->
 <div id="printArea">
     <div class="bloque bloque-superior">
         <div class="header-packing">
@@ -169,10 +254,8 @@
                 <div id="p_lista" class="tabla-packing"></div>
             </div>
             <div class="derecha-vacio">
-                <!-- CAMPO EMPRESA (solo para articulo JUDIWHITE) -->
                 <div id="empresaContainer" class="empresa-container" style="display: none;">
-                    <div class="empresa-label"></div>
-                    <div id="empresaValor" class="empresa-valor">—</div>
+                    <span id="empresaValor" class="empresa-valor"></span>
                 </div>
                 <div class="cargo-container">
                     <img src="CARGO.png" alt="CARGO" id="logoImagen" class="logo-print">
@@ -184,7 +267,7 @@
             <div class="info-central"><div class="cliente-line"><strong>CLIENTE:</strong> <span id="p_cliente">—</span></div></div>
             <div class="info-derecha">
                 <div class="vendedor-line"><strong>VENDEDOR:</strong> <span id="p_vendedor">—</span></div>
-                <div class="rollos-line"><strong>CANT. ROLLOS:</strong> <span id="p_rollos">0</span></div>
+                <div class="rollos-line"><strong>CANT.:</strong> <span id="p_rollos">0</span></div>
             </div>
         </div>
         <div class="aviso">
@@ -215,7 +298,7 @@
             <div class="info-central"><div class="cliente-line"><strong>CLIENTE:</strong> <span id="p_cliente2">—</span></div></div>
             <div class="info-derecha">
                 <div class="vendedor-line"><strong>VENDEDOR:</strong> <span id="p_vendedor2">—</span></div>
-                <div class="rollos-line"><strong>CANT. ROLLOS:</strong> <span id="p_rollos2">0</span></div>
+                <div class="rollos-line"><strong>CANT.:</strong> <span id="p_rollos2">0</span></div>
             </div>
         </div>
         <div class="aviso aviso-cliente">
@@ -228,6 +311,7 @@
     </div>
 </div>
 
+<!-- Modal de Confirmacion para Limpiar -->
 <div id="modalConfirmacion" class="modal-confirm" style="display: none;">
     <div class="modal-confirm-content">
         <h3>Limpiar lista</h3>
@@ -239,22 +323,76 @@
     </div>
 </div>
 
+<!-- Modal de Grabacion / Resumen -->
+<div id="modalGrabar" class="modal-grabar" style="display: none;">
+    <div class="modal-grabar-content">
+        <div class="modal-grabar-header">
+            <h2>LISTA GRABADA</h2>
+            <p>Revise los datos antes de continuar</p>
+        </div>
+        
+        <div class="resumen-packing">
+            <div class="resumen-header">
+                <div class="resumen-item">
+                    <span class="resumen-label">CLIENTE</span>
+                    <span id="resumenCliente" class="resumen-valor">—</span>
+                </div>
+                <div class="resumen-item">
+                    <span class="resumen-label">VENDEDOR</span>
+                    <span id="resumenVendedor" class="resumen-valor">—</span>
+                </div>
+            </div>
+            
+            <div class="resumen-tabla">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ARTICULO</th>
+                            <th>PRENDA</th>
+                            <th>CANTIDADES</th>
+                            <th>TOTAL</th>
+                        </tr>
+                    </thead>
+                    <tbody id="resumenTablaBody"></tbody>
+                </table>
+            </div>
+            
+            <div class="resumen-footer">
+                <span>TOTAL GENERAL</span>
+                <span id="resumenTotal">0.00</span>
+            </div>
+        </div>
+        
+        <div class="modal-grabar-buttons">
+            <button class="btn btn-editar" id="btnVolverEditar">VOLVER A EDITAR</button>
+            <button class="btn btn-pdf-grabar" id="btnGenerarPDF">GENERAR PDF</button>
+            <button class="btn btn-imprimir-grabar" id="btnImprimirGrabar">IMPRIMIR</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Confirmacion de Salida -->
+<div id="modalSalir" class="modal-salir" style="display: none;">
+    <div class="modal-salir-content">
+        <h3>¿Desea salir del sistema?</h3>
+        <p>Se cerrara su sesion actual.</p>
+        <div class="modal-salir-buttons">
+            <button class="btn-cancelar-salir" onclick="cancelarSalida()">CANCELAR</button>
+            <button class="btn-confirmar-salir" onclick="confirmarSalida()">SALIR</button>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de Inactividad -->
+<div id="modalInactividad" class="modal-inactividad" style="display: none;">
+    <div class="modal-inactividad-content">
+        <i class="fas fa-clock"></i>
+        <h3>¿Sigue ahi?</h3>
+        <p>Su sesion se cerrara por inactividad en <strong><span id="inactividadCountdown">30</span> segundos</strong>.</p>
+        <button class="btn btn-primary" onclick="continuarSesion()" style="padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">CONTINUAR TRABAJANDO</button>
+    </div>
+</div>
+
 <script src="script.js"></script>
 </body>
-<body>
-<script>
-    // VERIFICACION DE SEGURIDAD
-    (function() {
-        const loggedIn = sessionStorage.getItem('loggedIn');
-        const loginTime = sessionStorage.getItem('loginTime');
-        
-        if (!loggedIn || !loginTime || (new Date().getTime() - parseInt(loginTime)) > 28800000) {
-            sessionStorage.removeItem('loggedIn');
-            sessionStorage.removeItem('username');
-            sessionStorage.removeItem('loginTime');
-            window.location.href = 'login.html';
-        }
-    })();
-</script>
-<!-- RESTO DEL CONTENIDO DE PACKING.HTML -->
 </html>
