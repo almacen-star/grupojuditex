@@ -1082,3 +1082,99 @@ body {
         word-break: break-all;
     }
 }
+/* ========== BOTON ESTRATEGICO PACKING LIST JUDITEX ========== */
+.packing-cta {
+    margin: 60px auto 30px;
+    max-width: 800px;
+    background: linear-gradient(135deg, #1a5c34 0%, #0d3b23 100%);
+    border-radius: 20px;
+    padding: 40px 30px;
+    text-align: center;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+.packing-cta::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    animation: pulse 3s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 0.3; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(1.05); }
+}
+
+.packing-cta-content {
+    position: relative;
+    z-index: 2;
+}
+
+.packing-cta-content i.fa-clipboard-list {
+    font-size: 48px;
+    color: #f1c40f;
+    margin-bottom: 15px;
+    display: inline-block;
+}
+
+.packing-cta-content h3 {
+    color: white;
+    font-size: 24px;
+    margin-bottom: 12px;
+    font-weight: 700;
+}
+
+.packing-cta-content p {
+    color: #a8e6a8;
+    font-size: 14px;
+    margin-bottom: 25px;
+}
+
+.btn-packing {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    background: #f1c40f;
+    color: #0d3b23;
+    padding: 14px 32px;
+    border-radius: 50px;
+    font-weight: 700;
+    font-size: 16px;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+}
+
+.btn-packing:hover {
+    background: #e67e22;
+    color: white;
+    transform: translateY(-3px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+}
+
+.btn-packing i {
+    font-size: 18px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .packing-cta {
+        margin: 40px 20px;
+        padding: 30px 20px;
+    }
+    
+    .packing-cta-content h3 {
+        font-size: 20px;
+    }
+    
+    .btn-packing {
+        padding: 12px 24px;
+        font-size: 14px;
+    }
+}
