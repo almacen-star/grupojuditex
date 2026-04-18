@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Packing List | Sistema Textil</title>
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    
+    <link rel="stylesheet" href="styles.css">
+</head>
+<script>
+    // VERIFICACION DE SEGURIDAD - Redirigir a login si no hay sesion activa
+    (function() {
+        const loggedIn = sessionStorage.getItem('loggedIn');
+        const loginTime = sessionStorage.getItem('loginTime');
+        
+        // Si no hay sesion o la sesion tiene mas de 8 horas (28800000 ms)
+        if (!loggedIn || !loginTime || (new Date().getTime() - parseInt(loginTime)) > 28800000) {
+            // Limpiar sesion por seguridad
+            sessionStorage.removeItem('loggedIn');
+            sessionStorage.removeItem('username');
+            sessionStorage.removeItem('loginTime');
+            // Redirigir al login
+            window.location.href = 'login.html';
+        }
+    })();
+</script>
+<body>
+
+<main id="formulario" class="form-container">
+    <div class="card">
+        <header class="form-header">
+            <h1>PACKING LIST</h1>
+            
+            <div class="instrucciones">
+                <div class="instruccion-titulo">INSTRUCCIONES DE USO</div>
+                <div class="instruccion-lista">
+                    <div>1. Seleccione o busque un CLIENTE</div>
+                    <div>2. Seleccione un VENDEDOR</div>
+                    <div>3. Busque o seleccione un ARTICULO</div>
+                    <div>4. Ingrese CANTIDAD (metros) y presione ENTER</div>
+                    <div>5. Para finalizar un articulo, presione 0 en cantidad</div>
+                    <div>6. Maximo 6 articulos por packing list</div>
+                </div>
+            </div>
+        </header>
+        
+        <div class="form-grid">
+            <!-- CLIENTE - BUSCADOR TIPO SELECT -->
+            <div class="input-group">
+                <label for="clienteInput">CLIENTE</label>
+                <input type="text" id="clienteInput" placeholder="Escriba para buscar cliente..." autocomplete="off">
+                <div id="clienteSugerencias" class="sugerencias"></div>
+            </div>
+            
+            <!-- VENDEDOR - SELECT NORMAL -->
+            <div class="input-group">
+                <label for="vendedorSelect">VENDEDOR</label>
+                <select id="vendedorSelect">
+                    <option value="">-- SELECCIONAR VENDEDOR --</option>
+                    <option value="JESUS JUSTO">JESUS JUSTO</option>
+                    <option value="MIRELLA LANCHE">MIRELLA LANCHE</option>
+                    <option value="JORGE MATOS">JORGE MATOS</option>
+                    <option value="VICTOR MANUEL">VICTOR MANUEL</option>
+                </select>
+            </div>
+            
+            <!-- ARTICULO - BUSCADOR TIPO SELECT -->
+            <div class="input-group">
+                <label for="articuloInput">ARTICULO</label>
+                <input type="text" id="articuloInput" placeholder="Escriba para buscar articulo..." autocomplete="off">
+                <div id="articuloSugerencias" class="sugerencias"></div>
+                <input type="hidden" id="codigoArticuloHidden" value="">
+                <input type="hidden" id="empresaArticuloHidden" value="">
+            </div>
+            
+            <div class="input-group">
+                <label for="cantidadInput">CANTIDAD (metros)</label>
+                <input type="number" id="cantidadInput" step="0.01" min="0.01" placeholder="0.00" max="999">
+                <div class="input-ayuda">Presione 0 para finalizar el articulo actual</div>
+            </div>
+        </div>
+        
+        <!-- CAMPO PRENDA (toggle + inputs) -->
+        <div class="prenda-container">
+            <label class="prenda-toggle">
+                <input type="checkbox" id="prendaToggle">
+                <span class="prenda-toggle-label">AGREGAR PRENDA / REFERENCIA</span>
+            </label>
+            <div id="prendaCampos" class="prenda-campos" style="display: none;">
+                <div class="prenda-row">
+                    <div class="input-group mini">
+                        <label for="prendaTexto">TEXTO</label>
+                        <input type="text" id="prendaTexto" placeholder="Ej: PANTALON, CAMISA, CHAQUETA">
+                    </div>
+                    <div class="input-group mini">
+                        <label for="prendaNumeros">NUMEROS</label>
+                        <input type="text" id="prendaNumeros" placeholder="Ej: S, M, L, 28, 30, 32">
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="info-panel">
+            <div id="nombreArticulo" class="articulo-preview">
+                Ingrese o seleccione un articulo
+            </div>
+        </div>
+        
+        <div class="table-wrapper">
+            <table id="tabla" class="tabla-articulos">
+                <thead>
+                    <tr>
+                        <th>ARTICULO</th>
+                        <th>METROS</th>
+                        <th>PRENDA</th>
+                        <th>SUBTOTAL</th>
+                        <th>ACCION</th>
+                    </tr>
+                </thead>
+                <tbody id="tablaBody"></tbody>
+            </table>
+            <div id="tablaVacia" class="tabla-vacia">
+                No hay articulos agregados
+            </div>
+        </div>
+        
+        <div class="totales-grid">
+            <div class="total-card">
+                <span class="label">TOTAL METROS:</span>
+                <span id="total" class="valor">0.00</span>
+            </div>
+            <div class="total-card">
+                <span class="label">ARTICULOS:</span>
+                <span id="cantidad" class="valor">0</span>
+                <span class="limite">/6</span>
+            </div>
+            <div class="total-card">
+                <span class="label">CLIENTE:</span>
+                <span id="clienteNombre" class="valor">—</span>
+            </div>
+            <div class="total-card">
+                <span class="label">VENDEDOR:</span>
+                <span id="vendedorNombre" class="valor">—</span>
+            </div>
+        </div>
+        
+        <div class="progress-container">
+            <div id="progressBar" class="progress-bar" style="width: 0%"></div>
+        </div>
+        
+        <div class="button-group">
+            <button type="button" class="btn btn-primary" id="btnAgregar">AGREGAR (ENTER)</button>
+            <button type="button" class="btn btn-secondary" id="btnLimpiar">NUEVA LISTA</button>
+            <button type="button" class="btn btn-pdf" id="btnPDF">GUARDAR PDF</button>
+            <button type="button" class="btn btn-print" id="btnImprimir">IMPRIMIR</button>
+        </div>
+    </div>
+</main>
+
+<div id="printArea">
+    <div class="bloque bloque-superior">
+        <div class="header-packing">
+            <div class="titulo-packing">PACKING LIST</div>
+        </div>
+        <div class="contenido-principal">
+            <div class="izquierda-tabla">
+                <div id="p_lista" class="tabla-packing"></div>
+            </div>
+            <div class="derecha-vacio">
+                <!-- CAMPO EMPRESA (solo para articulo JUDIWHITE) -->
+                <div id="empresaContainer" class="empresa-container" style="display: none;">
+                    <div class="empresa-label">EMPRESA</div>
+                    <div id="empresaValor" class="empresa-valor">—</div>
+                </div>
+                <div class="cargo-container">
+                    <img src="CARGO.png" alt="CARGO" id="logoImagen" class="logo-print">
+                </div>
+            </div>
+        </div>
+        <div class="footer-superior">
+            <div class="total-izquierda"><strong>TOTAL:</strong> <span id="p_total">0.00</span></div>
+            <div class="info-central"><div class="cliente-line"><strong>CLIENTE:</strong> <span id="p_cliente">—</span></div></div>
+            <div class="info-derecha">
+                <div class="vendedor-line"><strong>VENDEDOR:</strong> <span id="p_vendedor">—</span></div>
+                <div class="rollos-line"><strong>CANT. ROLLOS:</strong> <span id="p_rollos">0</span></div>
+            </div>
+        </div>
+        <div class="aviso">
+            <strong>AVISO IMPORTANTE:</strong><br>
+            1. El cliente debera foliar o numerar las capas tendidas de tela.<br>
+            2. NO CORTE el rollo antes de comprobar calidad y metraje.<br>
+            <strong>ABSTENERSE DE RECLAMOS. GRACIAS.</strong>
+        </div>
+        <div class="fecha-impresion">Fecha: <span id="fechaActual1"></span></div>
+    </div>
+    
+    <div class="corte"><span>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</span><small>CORTAR</small></div>
+    
+    <div class="bloque bloque-inferior">
+        <div class="header-packing header-sin-cargo">
+            <div class="titulo-packing">PACKING LIST</div>
+        </div>
+        <div class="contenido-principal">
+            <div class="izquierda-tabla">
+                <div id="p_lista2" class="tabla-packing"></div>
+            </div>
+            <div class="derecha-vacio">
+                <div class="vacio-placeholder"></div>
+            </div>
+        </div>
+        <div class="footer-superior">
+            <div class="total-izquierda"><strong>TOTAL:</strong> <span id="p_total2">0.00</span></div>
+            <div class="info-central"><div class="cliente-line"><strong>CLIENTE:</strong> <span id="p_cliente2">—</span></div></div>
+            <div class="info-derecha">
+                <div class="vendedor-line"><strong>VENDEDOR:</strong> <span id="p_vendedor2">—</span></div>
+                <div class="rollos-line"><strong>CANT. ROLLOS:</strong> <span id="p_rollos2">0</span></div>
+            </div>
+        </div>
+        <div class="aviso aviso-cliente">
+            <strong>AVISO IMPORTANTE:</strong><br>
+            1. Foliar o numerar las capas tendidas.<br>
+            2. NO CORTE sin comprobar calidad.<br>
+            <strong>ABSTENERSE DE RECLAMOS.</strong>
+        </div>
+        <div class="fecha-impresion">Fecha: <span id="fechaActual2"></span></div>
+    </div>
+</div>
+
+<div id="modalConfirmacion" class="modal-confirm" style="display: none;">
+    <div class="modal-confirm-content">
+        <h3>Limpiar lista</h3>
+        <p>Se perderan todos los articulos agregados.</p>
+        <div class="modal-buttons">
+            <button class="btn btn-secondary" id="cancelarLimpiar">Cancelar</button>
+            <button class="btn btn-danger" id="confirmarLimpiar">Limpiar</button>
+        </div>
+    </div>
+</div>
+
+<script src="script.js"></script>
+</body>
+<body>
+<script>
+    // VERIFICACION DE SEGURIDAD
+    (function() {
+        const loggedIn = sessionStorage.getItem('loggedIn');
+        const loginTime = sessionStorage.getItem('loginTime');
+        
+        if (!loggedIn || !loginTime || (new Date().getTime() - parseInt(loginTime)) > 28800000) {
+            sessionStorage.removeItem('loggedIn');
+            sessionStorage.removeItem('username');
+            sessionStorage.removeItem('loginTime');
+            window.location.href = 'login.html';
+        }
+    })();
+</script>
+<!-- RESTO DEL CONTENIDO DE PACKING.HTML -->
+</html>

@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | Grupo Juditex - Packing List</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #0d3b23 0%, #1a5c34 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .login-container {
+            max-width: 450px;
+            width: 100%;
+        }
+
+        .login-card {
+            background: white;
+            border-radius: 24px;
+            padding: 40px 35px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.3);
+            text-align: center;
+        }
+
+        .logo-area {
+            margin-bottom: 25px;
+        }
+
+        .logo-area i {
+            font-size: 60px;
+            color: #1a5c34;
+        }
+
+        .logo-area h2 {
+            font-size: 24px;
+            color: #0d3b23;
+            margin-top: 10px;
+        }
+
+        .logo-area p {
+            color: #6b7280;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 14px;
+            transition: all 0.3s;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #1a5c34;
+            box-shadow: 0 0 0 3px rgba(26,92,52,0.1);
+        }
+
+        .btn-login {
+            width: 100%;
+            background: #1a5c34;
+            color: white;
+            border: none;
+            padding: 14px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+
+        .btn-login:hover {
+            background: #0d3b23;
+            transform: translateY(-2px);
+        }
+
+        .login-options {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .login-options button {
+            background: none;
+            border: none;
+            color: #1a5c34;
+            font-size: 13px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .login-options button:hover {
+            color: #e67e22;
+            text-decoration: underline;
+        }
+
+        /* Modal de notificacion */
+        .modal-notify {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            display: none;
+        }
+
+        .modal-notify-content {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            max-width: 380px;
+            text-align: center;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .modal-notify-content i {
+            font-size: 60px;
+            margin-bottom: 15px;
+        }
+
+        .modal-notify-content i.fa-shield-alt {
+            color: #f39c12;
+        }
+
+        .modal-notify-content i.fa-envelope {
+            color: #3498db;
+        }
+
+        .modal-notify-content h3 {
+            font-size: 22px;
+            margin-bottom: 12px;
+            color: #2c3e50;
+        }
+
+        .modal-notify-content p {
+            color: #6b7280;
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        .modal-notify-content .contact-link {
+            color: #1a5c34;
+            font-weight: bold;
+            text-decoration: none;
+            border-bottom: 2px solid #1a5c34;
+            display: inline-block;
+            margin-top: 10px;
+        }
+
+        .modal-notify-content button {
+            margin-top: 20px;
+            padding: 10px 24px;
+            background: #1a5c34;
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .error-message {
+            background: #fee2e2;
+            color: #dc2626;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .security-badge {
+            margin-top: 20px;
+            font-size: 11px;
+            color: #9ca3af;
+        }
+
+        .security-badge i {
+            margin-right: 5px;
+        }
+
+        @media (max-width: 480px) {
+            .login-card {
+                padding: 30px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="login-card">
+            <div class="logo-area">
+                <i class="fas fa-clipboard-list"></i>
+                <h2>Packing List Juditex</h2>
+                <p>Sistema de empaque profesional</p>
+            </div>
+
+            <div id="errorMessage" class="error-message">
+                <i class="fas fa-exclamation-triangle"></i> Usuario o contraseña incorrectos
+            </div>
+
+            <form id="loginForm">
+                <div class="input-group">
+                    <label><i class="fas fa-user"></i> USUARIO</label>
+                    <input type="text" id="username" placeholder="Ingrese su usuario" autocomplete="off" required>
+                </div>
+                <div class="input-group">
+                    <label><i class="fas fa-lock"></i> CONTRASEÑA</label>
+                    <input type="password" id="password" placeholder="Ingrese su contraseña" required>
+                </div>
+                <button type="submit" class="btn-login">
+                    <i class="fas fa-sign-in-alt"></i> INGRESAR
+                </button>
+            </form>
+
+            <div class="login-options">
+                <button id="btnCrearUsuario">
+                    <i class="fas fa-user-plus"></i> Crear Usuario
+                </button>
+                <button id="btnRecuperar">
+                    <i class="fas fa-key"></i> Recuperar Contraseña
+                </button>
+            </div>
+
+            <div class="security-badge">
+                <i class="fas fa-shield-alt"></i> Sistema seguro - Acceso restringido
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para notificaciones -->
+    <div id="modalNotify" class="modal-notify">
+        <div class="modal-notify-content" id="modalContent">
+            <i id="modalIcon" class="fas fa-shield-alt"></i>
+            <h3 id="modalTitle">Contacte con Administrador</h3>
+            <p id="modalMessage">Para crear un nuevo usuario, por favor contacte con el administrador del sistema.</p>
+            <p><strong>Correo:</strong> <a href="mailto:administracion@grupojuditex.com" class="contact-link">administracion@grupojuditex.com</a></p>
+            <p><strong>WhatsApp:</strong> <a href="https://wa.me/51970855278" target="_blank" class="contact-link">+51 970 855 278</a></p>
+            <button id="closeModalBtn">Cerrar</button>
+        </div>
+    </div>
+
+    <script>
+        // USUARIOS VALIDADOS (solo estos pueden acceder)
+        const USERS = [
+            { username: "admin", password: "1234" },
+            { username: "juditex", password: "telas2024" },
+            { username: "packing", password: "packing123" }
+        ];
+
+        // Elementos del DOM
+        const loginForm = document.getElementById('loginForm');
+        const errorMessage = document.getElementById('errorMessage');
+        const usernameInput = document.getElementById('username');
+        const passwordInput = document.getElementById('password');
+        const btnCrearUsuario = document.getElementById('btnCrearUsuario');
+        const btnRecuperar = document.getElementById('btnRecuperar');
+        const modalNotify = document.getElementById('modalNotify');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+
+        // Funcion para mostrar notificacion
+        function showNotification(title, message, icon = 'fa-shield-alt') {
+            document.getElementById('modalIcon').className = `fas ${icon}`;
+            document.getElementById('modalTitle').innerText = title;
+            document.getElementById('modalMessage').innerHTML = message;
+            modalNotify.style.display = 'flex';
+        }
+
+        // Cerrar modal
+        function closeModal() {
+            modalNotify.style.display = 'none';
+        }
+
+        closeModalBtn.addEventListener('click', closeModal);
+        modalNotify.addEventListener('click', function(e) {
+            if (e.target === modalNotify) closeModal();
+        });
+
+        // Crear Usuario - notificacion
+        btnCrearUsuario.addEventListener('click', function() {
+            showNotification(
+                'Contacte con Administrador',
+                'La creacion de nuevos usuarios solo puede ser realizada por el administrador del sistema. Por favor contacte con soporte.',
+                'fa-user-shield'
+            );
+        });
+
+        // Recuperar Contraseña - notificacion
+        btnRecuperar.addEventListener('click', function() {
+            showNotification(
+                'Recuperar Contraseña',
+                'Si olvido su contraseña, por favor contacte con soporte tecnico para restablecer su acceso.',
+                'fa-envelope'
+            );
+        });
+
+        // Validar login
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const username = usernameInput.value.trim();
+            const password = passwordInput.value.trim();
+
+            // Validar que no esten vacios
+            if (!username || !password) {
+                errorMessage.style.display = 'block';
+                errorMessage.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Complete todos los campos';
+                setTimeout(() => {
+                    errorMessage.style.display = 'none';
+                }, 3000);
+                return;
+            }
+
+            // Buscar usuario en la lista
+            const userFound = USERS.find(user => 
+                user.username === username && user.password === password
+            );
+
+            if (userFound) {
+                // LOGIN EXITOSO - Guardar sesion y redirigir
+                sessionStorage.setItem('loggedIn', 'true');
+                sessionStorage.setItem('username', username);
+                sessionStorage.setItem('loginTime', new Date().getTime());
+                
+                // Redirigir a packing.html
+                window.location.href = 'packing.html';
+            } else {
+                // LOGIN FALLIDO
+                errorMessage.style.display = 'block';
+                errorMessage.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Usuario o contraseña incorrectos';
+                usernameInput.value = '';
+                passwordInput.value = '';
+                usernameInput.focus();
+                
+                setTimeout(() => {
+                    errorMessage.style.display = 'none';
+                }, 3000);
+            }
+        });
+
+        // Prevenir acceso directo con tecla Enter en inputs
+        usernameInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                passwordInput.focus();
+            }
+        });
+
+        passwordInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                loginForm.dispatchEvent(new Event('submit'));
+            }
+        });
+    </script>
+</body>
+</html>

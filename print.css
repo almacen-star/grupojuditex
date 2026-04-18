@@ -1,0 +1,148 @@
+/* ESTILOS PARA IMPRESIÓN */
+@media print {
+    body {
+        background: white;
+        padding: 0;
+        margin: 0;
+    }
+    
+    .form-container {
+        display: none;
+    }
+    
+    #printArea {
+        display: block;
+        margin: 0;
+        padding: 0;
+    }
+    
+    /* EN IMPRESIÓN: MOSTRAR AMBOS BLOQUES */
+    #printArea .bloque:first-child,
+    #printArea .bloque:last-child {
+        display: block;
+        page-break-after: avoid;
+    }
+    
+    .bloque {
+        border: none;
+        margin: 0;
+        padding: 15px;
+        page-break-inside: avoid;
+    }
+    
+    .corte {
+        display: block;
+        text-align: center;
+        font-size: 10px;
+        margin: 5px 0;
+        color: #999;
+    }
+    
+    .header-packing {
+        margin-bottom: 15px;
+    }
+    
+    .tabla-packing table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .tabla-packing td {
+        border-bottom: 1px solid #000;
+        padding: 5px;
+    }
+    
+    .aviso {
+        font-size: 8px;
+        margin-top: 15px;
+    }
+    
+    .footer-superior {
+        margin-top: 15px;
+    }
+}
+
+/* ESTILOS PARA VISTA PREVIA (SOLO MITAD) */
+#printArea .bloque:first-child {
+    display: block;
+    max-width: 800px;
+    margin: 20px auto;
+    border: 1px solid #ddd;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+#printArea .bloque:last-child {
+    display: none;
+}
+
+.corte {
+    display: none;
+}
+
+/* Estilos del packing list */
+.header-packing {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #000;
+    padding-bottom: 10px;
+}
+
+.titulo-packing {
+    font-size: 20px;
+    font-weight: bold;
+}
+
+.numero-packing {
+    margin-left: 10px;
+    font-size: 16px;
+}
+
+.imagen-cargo img {
+    max-width: 150px;
+    height: auto;
+}
+
+.contenido-principal {
+    margin-bottom: 20px;
+}
+
+.tabla-packing table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.tabla-packing td {
+    border-bottom: 1px solid #999;
+    padding: 8px;
+}
+
+.footer-superior {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 20px;
+    padding-top: 10px;
+    border-top: 1px solid #000;
+}
+
+.total-izquierda {
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.info-derecha {
+    text-align: right;
+}
+
+.cliente-line, .vendedor-line, .rollos-line {
+    margin-bottom: 5px;
+}
+
+.aviso {
+    font-size: 9px;
+    margin-top: 20px;
+    padding: 10px;
+    background: #f9f9f9;
+    border-left: 3px solid #ffc107;
+}
