@@ -6,6 +6,13 @@
     <title>Login | Grupo Juditex - Packing List</title>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
+    <!-- SUPABASE SDK -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- BCRYPT LIBRARY (para verificar contraseñas en frontend) -->
+    <script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
+    
     <style>
         * {
             margin: 0;
@@ -152,16 +159,6 @@
             cursor: not-allowed;
         }
 
-        .loading-spinner {
-            display: inline-block;
-            animation: spin 1s linear infinite;
-        }
-
-        @keyframes spin {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
         .login-options {
             display: flex;
             justify-content: space-between;
@@ -185,7 +182,7 @@
             text-decoration: underline;
         }
 
-        /* Modal de notificacion */
+        /* Modal de notificación */
         .modal-notify {
             position: fixed;
             top: 0;
@@ -217,18 +214,6 @@
         .modal-notify-content i {
             font-size: 60px;
             margin-bottom: 15px;
-        }
-
-        .modal-notify-content i.fa-shield-alt {
-            color: #f39c12;
-        }
-
-        .modal-notify-content i.fa-envelope {
-            color: #3498db;
-        }
-
-        .modal-notify-content i.fa-exclamation-triangle {
-            color: #e74c3c;
         }
 
         .modal-notify-content h3 {
@@ -274,17 +259,6 @@
             border-left: 4px solid #dc2626;
         }
 
-        .warning-message {
-            background: #fef3c7;
-            color: #d97706;
-            padding: 12px;
-            border-radius: 10px;
-            font-size: 13px;
-            margin-bottom: 20px;
-            display: none;
-            border-left: 4px solid #d97706;
-        }
-
         .security-badge {
             margin-top: 20px;
             font-size: 11px;
@@ -293,90 +267,6 @@
 
         .security-badge i {
             margin-right: 5px;
-        }
-
-        .intentos-info {
-            text-align: center;
-            margin-top: 10px;
-            font-size: 12px;
-            color: #6b7280;
-        }
-
-        /* Modal de confirmacion de salida */
-        .modal-confirm-exit {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 9999;
-            display: none;
-        }
-
-        .modal-confirm-exit-content {
-            background: white;
-            padding: 25px 30px;
-            border-radius: 12px;
-            max-width: 350px;
-            text-align: center;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
-
-        .modal-confirm-exit-content h3 {
-            color: #1a5c34;
-            margin-bottom: 15px;
-            font-size: 18px;
-        }
-
-        .modal-confirm-exit-content p {
-            color: #4b5563;
-            margin-bottom: 20px;
-        }
-
-        .modal-confirm-exit-buttons {
-            display: flex;
-            gap: 12px;
-            justify-content: center;
-        }
-
-        .modal-confirm-exit-buttons button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            font-size: 14px;
-            transition: all 0.2s;
-        }
-
-        .btn-exit-cancel {
-            background: #6b7280;
-            color: white;
-        }
-
-        .btn-exit-confirm {
-            background: #dc2626;
-            color: white;
-        }
-
-        .btn-exit-cancel:hover, .btn-exit-confirm:hover {
-            transform: translateY(-1px);
-            filter: brightness(0.9);
-        }
-
-        /* Animación de shake para error */
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
-            20%, 40%, 60%, 80% { transform: translateX(5px); }
-        }
-
-        .shake {
-            animation: shake 0.5s ease-in-out;
         }
 
         @media (max-width: 480px) {
@@ -398,11 +288,6 @@
             <div id="errorMessage" class="error-message">
                 <i class="fas fa-exclamation-triangle"></i> 
                 <span id="errorText">Usuario o contraseña incorrectos</span>
-            </div>
-
-            <div id="warningMessage" class="warning-message">
-                <i class="fas fa-exclamation-circle"></i> 
-                <span id="warningText"></span>
             </div>
 
             <form id="loginForm">
@@ -431,8 +316,6 @@
                 </button>
             </form>
 
-            <div id="intentosInfo" class="intentos-info"></div>
-
             <div class="login-options">
                 <button id="btnCrearUsuario">
                     <i class="fas fa-user-plus"></i> Crear Usuario
@@ -443,14 +326,14 @@
             </div>
 
             <div class="security-badge">
-                <i class="fas fa-shield-alt"></i> Sistema seguro - Acceso restringido
+                <i class="fas fa-shield-alt"></i> Sistema seguro - Base de datos en la nube
             </div>
         </div>
     </div>
 
     <!-- Modal para notificaciones -->
     <div id="modalNotify" class="modal-notify">
-        <div class="modal-notify-content" id="modalContent">
+        <div class="modal-notify-content">
             <i id="modalIcon" class="fas fa-shield-alt"></i>
             <h3 id="modalTitle">Contacte con Administrador</h3>
             <p id="modalMessage">Para crear un nuevo usuario, por favor contacte con el administrador del sistema.</p>
@@ -460,23 +343,19 @@
         </div>
     </div>
 
-    <!-- Modal de bloqueo por intentos -->
-    <div id="modalBlocked" class="modal-notify">
-        <div class="modal-notify-content">
-            <i class="fas fa-lock" style="color: #dc2626;"></i>
-            <h3>Acceso Bloqueado</h3>
-            <p id="blockedMessage">Demasiados intentos fallidos. El acceso ha sido bloqueado temporalmente.</p>
-            <p><strong>Tiempo restante:</strong> <span id="countdownTimer">15:00</span></p>
-            <button id="closeBlockedModalBtn" disabled style="opacity: 0.5;">Esperar</button>
-        </div>
-    </div>
-
 <script>
-// ================= LOGIN SCRIPT =================
+// ==========================================
+// CONFIGURACIÓN DE SUPABASE
+// ==========================================
+const SUPABASE_URL = 'https://gcgjzuebjypaffsdlact.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjZ2p6dWVianlwYWZmc2RsYWN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzcxMzQ4NzAsImV4cCI6MjA5MjcxMDg3MH0.48uu08OwTy8S9TxyDGjWXo3cw0A7SkNUxwjg6cjJkaI';
 
-//----------------------------------
-// PROTECCION HISTORIAL MEJORADA
-//----------------------------------
+// Inicializar Supabase (SOLO UNA VEZ)
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ==========================================
+// PROTECCIÓN DE HISTORIAL
+// ==========================================
 (function() {
     if (window.history && window.history.pushState) {
         history.pushState(null, null, location.href);
@@ -492,66 +371,25 @@
     }
 })();
 
-//----------------------------------
-// SISTEMA DE USUARIOS
-//----------------------------------
-function inicializarUsuarios() {
-    if (!localStorage.getItem("usuarios")) {
-        const usuariosDemo = [
-            {
-                usuario: "admin",
-                password: "1234",
-                rol: "admin",
-                estado: "activo",
-                ultimoAcceso: null,
-                intentosFallidos: 0,
-                bloqueadoHasta: null
-            },
-            {
-                usuario: "juditex",
-                password: "telas2024",
-                rol: "usuario",
-                estado: "activo",
-                ultimoAcceso: null,
-                intentosFallidos: 0,
-                bloqueadoHasta: null
-            },
-            {
-                usuario: "packing",
-                password: "packing123",
-                rol: "usuario",
-                estado: "activo",
-                ultimoAcceso: null,
-                intentosFallidos: 0,
-                bloqueadoHasta: null
-            }
-        ];
-        localStorage.setItem("usuarios", JSON.stringify(usuariosDemo));
-    }
-}
-
-inicializarUsuarios();
-
-let USERS = JSON.parse(localStorage.getItem("usuarios"));
-
-//----------------------------------
+// ==========================================
 // CONFIGURACIÓN
-//----------------------------------
+// ==========================================
 const CONFIG = {
     MAX_INTENTOS: 3,
-    TIEMPO_BLOQUEO: 15 * 60 * 1000, // 15 minutos
-    LONGITUD_MIN_PASSWORD: 4
+    TIEMPO_BLOQUEO: 10 * 60 * 1000,
 };
 
-//----------------------------------
+// ==========================================
 // ESTADO DE LA APLICACIÓN
-//----------------------------------
+// ==========================================
 let intentosFallidos = parseInt(sessionStorage.getItem('intentosFallidos')) || 0;
-let bloqueadoHasta = sessionStorage.getItem('bloqueadoHasta') ? new Date(sessionStorage.getItem('bloqueadoHasta')) : null;
+let bloqueadoHasta = sessionStorage.getItem('bloqueadoHasta') 
+    ? new Date(sessionStorage.getItem('bloqueadoHasta')) 
+    : null;
 
-//----------------------------------
+// ==========================================
 // ELEMENTOS DEL DOM
-//----------------------------------
+// ==========================================
 const loginForm = document.getElementById('loginForm');
 const errorMessage = document.getElementById('errorMessage');
 const errorText = document.getElementById('errorText');
@@ -561,22 +399,12 @@ const btnLogin = document.getElementById('btnLogin');
 const togglePassword = document.getElementById('togglePassword');
 const rememberMe = document.getElementById('rememberMe');
 
-//----------------------------------
+// ==========================================
 // FUNCIONES DE UTILIDAD
-//----------------------------------
+// ==========================================
 function showError(message, autoHide = true) {
-    if (errorText) {
-        errorText.textContent = message;
-    } else {
-        errorMessage.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${message}`;
-    }
+    errorText.textContent = message;
     errorMessage.style.display = 'block';
-    
-    // Agregar animación de shake
-    document.querySelector('.login-card')?.classList.add('shake');
-    setTimeout(() => {
-        document.querySelector('.login-card')?.classList.remove('shake');
-    }, 500);
     
     if (autoHide) {
         setTimeout(() => {
@@ -586,19 +414,18 @@ function showError(message, autoHide = true) {
 }
 
 function showLoading(show) {
-    const btn = document.getElementById('btnLogin');
     if (show) {
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> INGRESANDO...';
-        btn.disabled = true;
+        btnLogin.innerHTML = '<i class="fas fa-spinner fa-spin"></i> INGRESANDO...';
+        btnLogin.disabled = true;
     } else {
-        btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> INGRESAR';
-        btn.disabled = false;
+        btnLogin.innerHTML = '<i class="fas fa-sign-in-alt"></i> INGRESAR';
+        btnLogin.disabled = false;
     }
 }
 
-//----------------------------------
+// ==========================================
 // VERIFICACIÓN DE BLOQUEO
-//----------------------------------
+// ==========================================
 function checkIfBlocked() {
     if (bloqueadoHasta) {
         const ahora = new Date();
@@ -616,226 +443,256 @@ function checkIfBlocked() {
     return false;
 }
 
-//----------------------------------
-// FUNCIÓN DE LOGIN PRINCIPAL
-//----------------------------------
-function realizarLogin(username, password) {
-    // Verificar bloqueo
+// ==========================================
+// FUNCIÓN DE LOGIN CON SUPABASE
+// ==========================================
+async function realizarLogin(username, password) {
+    console.log('🔍 Intentando login con:', username);
+    
     if (checkIfBlocked()) {
         return false;
     }
     
-    // Validar campos
     if (!username || !password) {
         showError('Complete todos los campos');
         return false;
     }
     
-    // Limpiar y normalizar inputs
-    username = username.trim();
-    password = password.trim();
+    showLoading(true);
     
-    // Buscar usuario (comparación exacta)
-    const userFound = USERS.find(user => 
-        user.usuario === username && 
-        user.password === password && 
-        user.estado === "activo"
-    );
-    
-    if (userFound) {
-        // Resetear intentos fallidos
-        intentosFallidos = 0;
-        sessionStorage.setItem('intentosFallidos', '0');
+    try {
+        // Buscar usuario en Supabase
+        console.log('📡 Consultando Supabase...');
+        const { data: usuarios, error: queryError } = await supabaseClient
+            .from('usuarios')
+            .select('*')
+            .eq('usuario', username.trim())
+            .eq('estado', 'activo')
+            .single();
         
-        // Actualizar último acceso
-        userFound.ultimoAcceso = new Date().toISOString();
-        userFound.intentosFallidos = 0;
-        localStorage.setItem("usuarios", JSON.stringify(USERS));
+        console.log('📋 Respuesta:', { usuarios, queryError });
         
-        // GUARDAR SESIÓN
-        const loginTime = Date.now();
-        sessionStorage.setItem('loggedIn', 'true');
-        sessionStorage.setItem('username', userFound.usuario);
-        sessionStorage.setItem('rol', userFound.rol);
-        sessionStorage.setItem('loginTime', loginTime.toString());
-        
-        // Recordar usuario
-        if (rememberMe && rememberMe.checked) {
-            localStorage.setItem('rememberedUser', userFound.usuario);
-        } else {
-            localStorage.removeItem('rememberedUser');
+        if (queryError || !usuarios) {
+            console.log('❌ Usuario no encontrado');
+            showError('Usuario o contraseña incorrectos');
+            
+            // Registrar intento fallido
+            await supabaseClient
+                .from('logs_acceso')
+                .insert([{
+                    usuario_input: username.trim(),
+                    exito: false,
+                    motivo_fallo: 'Usuario no encontrado'
+                }]);
+            
+            showLoading(false);
+            return false;
         }
         
-        // Mostrar mensaje de éxito
-        showLoading(true);
-        
-        // REDIRECCIÓN
-        setTimeout(() => {
-            window.location.href = 'packing.html';
-        }, 500);
-        
-        return true;
-        
-    } else {
-        // Manejar intento fallido
-        intentosFallidos++;
-        sessionStorage.setItem('intentosFallidos', intentosFallidos.toString());
-        
-        const restantes = CONFIG.MAX_INTENTOS - intentosFallidos;
-        
-        if (intentosFallidos >= CONFIG.MAX_INTENTOS) {
-            bloqueadoHasta = new Date(Date.now() + CONFIG.TIEMPO_BLOQUEO);
-            sessionStorage.setItem('bloqueadoHasta', bloqueadoHasta.toISOString());
-            showError(`Demasiados intentos fallidos. Acceso bloqueado por 15 minutos.`, false);
-        } else {
-            showError(`Usuario o contraseña incorrectos. Intentos restantes: ${restantes}`);
+        // Verificar si está bloqueado
+        if (usuarios.estado === 'bloqueado' && usuarios.bloqueado_hasta) {
+            const bloqueadoHastaDB = new Date(usuarios.bloqueado_hasta);
+            const ahora = new Date();
+            
+            if (ahora < bloqueadoHastaDB) {
+                const minutos = Math.ceil((bloqueadoHastaDB - ahora) / 60000);
+                showError(`Cuenta bloqueada. Tiempo restante: ${minutos} minutos`, false);
+                showLoading(false);
+                return false;
+            } else {
+                // Desbloquear
+                await supabaseClient
+                    .from('usuarios')
+                    .update({
+                        estado: 'activo',
+                        intentos_fallidos: 0,
+                        bloqueado_hasta: null
+                    })
+                    .eq('id', usuarios.id);
+            }
         }
         
-        passwordInput.value = '';
-        passwordInput.focus();
+        // Verificar contraseña con bcrypt
+        console.log('🔐 Verificando contraseña...');
+        const passwordValida = dcodeIO.bcrypt.compareSync(password, usuarios.password);
+        console.log('🔐 ¿Contraseña válida?:', passwordValida);
+        
+        if (passwordValida) {
+            console.log('✅ LOGIN EXITOSO');
+            
+            // Actualizar último acceso
+            await supabaseClient
+                .from('usuarios')
+                .update({
+                    ultimo_acceso: new Date().toISOString(),
+                    intentos_fallidos: 0,
+                    bloqueado_hasta: null
+                })
+                .eq('id', usuarios.id);
+            
+            // Registrar log exitoso
+            await supabaseClient
+                .from('logs_acceso')
+                .insert([{
+                    usuario_id: usuarios.id,
+                    usuario_input: username.trim(),
+                    exito: true,
+                    motivo_fallo: null
+                }]);
+            
+            // Guardar sesión
+            sessionStorage.setItem('loggedIn', 'true');
+            sessionStorage.setItem('username', usuarios.usuario);
+            sessionStorage.setItem('rol', usuarios.rol);
+            sessionStorage.setItem('userId', usuarios.id);
+            
+            // Recordar usuario
+            if (rememberMe.checked) {
+                localStorage.setItem('rememberedUser', usuarios.usuario);
+            } else {
+                localStorage.removeItem('rememberedUser');
+            }
+            
+            // Resetear intentos locales
+            intentosFallidos = 0;
+            sessionStorage.setItem('intentosFallidos', '0');
+            sessionStorage.removeItem('bloqueadoHasta');
+            
+            showLoading(false);
+            
+            // Redirigir
+            setTimeout(() => {
+                window.location.href = 'packing.html';
+            }, 500);
+            
+            return true;
+            
+        } else {
+            console.log('❌ Contraseña incorrecta');
+            
+            const nuevosIntentos = (usuarios.intentos_fallidos || 0) + 1;
+            
+            if (nuevosIntentos >= CONFIG.MAX_INTENTOS) {
+                const bloqueadoHastaDB = new Date(Date.now() + CONFIG.TIEMPO_BLOQUEO);
+                
+                await supabaseClient
+                    .from('usuarios')
+                    .update({
+                        intentos_fallidos: nuevosIntentos,
+                        estado: 'bloqueado',
+                        bloqueado_hasta: bloqueadoHastaDB.toISOString()
+                    })
+                    .eq('id', usuarios.id);
+                
+                showError('Demasiados intentos. Cuenta bloqueada por 10 minutos.', false);
+                
+            } else {
+                await supabaseClient
+                    .from('usuarios')
+                    .update({
+                        intentos_fallidos: nuevosIntentos
+                    })
+                    .eq('id', usuarios.id);
+                
+                const restantes = CONFIG.MAX_INTENTOS - nuevosIntentos;
+                showError(`Contraseña incorrecta. Intentos restantes: ${restantes}`);
+            }
+            
+            passwordInput.value = '';
+            passwordInput.focus();
+            showLoading(false);
+            return false;
+        }
+        
+    } catch (error) {
+        console.error('❌ Error de conexión:', error);
+        showError('Error de conexión con el servidor');
+        showLoading(false);
         return false;
     }
 }
 
-//----------------------------------
+// ==========================================
 // EVENT LISTENERS
-//----------------------------------
-if (loginForm) {
-    loginForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const username = usernameInput.value;
-        const password = passwordInput.value;
-        realizarLogin(username, password);
-    });
-}
+// ==========================================
+loginForm.addEventListener('submit', function(e) {
+    e.preventDefault();
+    realizarLogin(usernameInput.value, passwordInput.value);
+});
 
-// Toggle password visibility
-if (togglePassword) {
-    togglePassword.addEventListener('click', function() {
-        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
-        passwordInput.setAttribute('type', type);
-        this.classList.toggle('fa-eye');
-        this.classList.toggle('fa-eye-slash');
-    });
-}
+// Toggle password
+togglePassword.addEventListener('click', function() {
+    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+    passwordInput.setAttribute('type', type);
+    this.classList.toggle('fa-eye');
+    this.classList.toggle('fa-eye-slash');
+});
 
 // Cargar usuario recordado
 window.addEventListener('load', function() {
     const rememberedUser = localStorage.getItem('rememberedUser');
-    if (rememberedUser && usernameInput) {
+    if (rememberedUser) {
         usernameInput.value = rememberedUser;
-        if (rememberMe) rememberMe.checked = true;
-        if (passwordInput) passwordInput.focus();
-    } else if (usernameInput) {
+        rememberMe.checked = true;
+        passwordInput.focus();
+    } else {
         usernameInput.focus();
     }
-    
-    // Verificar si hay bloqueo activo
-    if (checkIfBlocked()) {
-        if (usernameInput) usernameInput.disabled = true;
-        if (passwordInput) passwordInput.disabled = true;
-        if (btnLogin) btnLogin.disabled = true;
-    }
-    
-    // Limpiar campos de contraseña por seguridad
-    if (passwordInput) passwordInput.value = '';
 });
 
-// Atajos de teclado
-if (usernameInput) {
-    usernameInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            if (passwordInput) passwordInput.focus();
-        }
-    });
-}
+// Enter key navigation
+usernameInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        passwordInput.focus();
+    }
+});
 
-if (passwordInput) {
-    passwordInput.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            if (loginForm) loginForm.dispatchEvent(new Event('submit'));
-        }
-    });
-}
+passwordInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        loginForm.dispatchEvent(new Event('submit'));
+    }
+});
 
-// Limpiar mensajes al escribir
-if (usernameInput) {
-    usernameInput.addEventListener('input', function() {
-        if (errorMessage) errorMessage.style.display = 'none';
-    });
-}
+// Limpiar error al escribir
+usernameInput.addEventListener('input', () => errorMessage.style.display = 'none');
+passwordInput.addEventListener('input', () => errorMessage.style.display = 'none');
 
-if (passwordInput) {
-    passwordInput.addEventListener('input', function() {
-        if (errorMessage) errorMessage.style.display = 'none';
-    });
-}
-
-//----------------------------------
+// ==========================================
 // BOTONES ADICIONALES
-//----------------------------------
-const btnCrearUsuario = document.getElementById('btnCrearUsuario');
-const btnRecuperar = document.getElementById('btnRecuperar');
-const modalNotify = document.getElementById('modalNotify');
-const closeModalBtn = document.getElementById('closeModalBtn');
+// ==========================================
+document.getElementById('btnCrearUsuario').addEventListener('click', function() {
+    document.getElementById('modalIcon').className = 'fas fa-user-plus';
+    document.getElementById('modalTitle').innerText = 'Crear Nuevo Usuario';
+    document.getElementById('modalMessage').innerHTML = 
+        'Para crear un nuevo usuario, contacte al administrador.<br><br>' +
+        '<strong>📧 Email:</strong> administracion@grupojuditex.com<br>' +
+        '<strong>📱 WhatsApp:</strong> +51 970 855 278';
+    document.getElementById('modalNotify').style.display = 'flex';
+});
 
-function showNotification(title, message, icon = 'fa-shield-alt') {
-    const modalIcon = document.getElementById('modalIcon');
-    const modalTitle = document.getElementById('modalTitle');
-    const modalMessage = document.getElementById('modalMessage');
-    
-    if (modalIcon) modalIcon.className = `fas ${icon}`;
-    if (modalTitle) modalTitle.innerText = title;
-    if (modalMessage) modalMessage.innerHTML = message;
-    if (modalNotify) modalNotify.style.display = 'flex';
-}
+document.getElementById('btnRecuperar').addEventListener('click', function() {
+    document.getElementById('modalIcon').className = 'fas fa-key';
+    document.getElementById('modalTitle').innerText = 'Recuperar Contraseña';
+    document.getElementById('modalMessage').innerHTML = 
+        'Para recuperar su contraseña, contacte a soporte.<br><br>' +
+        '<strong>📧 Soporte:</strong> soporte@grupojuditex.com<br>' +
+        '<strong>📱 WhatsApp:</strong> +51 970 855 278';
+    document.getElementById('modalNotify').style.display = 'flex';
+});
 
-function closeModal() {
-    if (modalNotify) modalNotify.style.display = 'none';
-}
+document.getElementById('closeModalBtn').addEventListener('click', function() {
+    document.getElementById('modalNotify').style.display = 'none';
+});
 
-if (btnCrearUsuario) {
-    btnCrearUsuario.addEventListener('click', function() {
-        showNotification(
-            'Crear Nuevo Usuario',
-            'Para crear un nuevo usuario, contacte al administrador del sistema.<br><br>' +
-            '<strong>📧 Email:</strong> administracion@grupojuditex.com<br>' +
-            '<strong>📱 WhatsApp:</strong> +51 970 855 278',
-            'fa-user-plus'
-        );
-    });
-}
+document.getElementById('modalNotify').addEventListener('click', function(e) {
+    if (e.target === this) {
+        this.style.display = 'none';
+    }
+});
 
-if (btnRecuperar) {
-    btnRecuperar.addEventListener('click', function() {
-        const username = usernameInput ? usernameInput.value.trim() : '';
-        let mensaje = 'Para recuperar su contraseña, contacte con soporte técnico.';
-        
-        if (username) {
-            mensaje = `Para recuperar la contraseña del usuario "${username}", contacte a soporte.`;
-        }
-        
-        showNotification(
-            'Recuperar Contraseña',
-            mensaje + '<br><br>' +
-            '<strong>📧 Soporte:</strong> soporte@grupojuditex.com<br>' +
-            '<strong>📱 WhatsApp:</strong> +51 970 855 278',
-            'fa-key'
-        );
-    });
-}
-
-if (closeModalBtn) {
-    closeModalBtn.addEventListener('click', closeModal);
-}
-
-if (modalNotify) {
-    modalNotify.addEventListener('click', function(e) {
-        if (e.target === modalNotify) closeModal();
-    });
-}
+console.log('✅ Sistema listo - Supabase conectado');
 </script>
 </body>
 </html>
