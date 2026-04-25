@@ -740,41 +740,156 @@ const articulosLista = [
 let lista = [];
 let totalMetros = 0;
 const MAX_ITEMS = 6;
-const MAX_FILAS_POR_ARTICULO = 16;
-const COLUMNAS_POR_FILA = 5;
+const MAX_FILAS_POR_ARTICULO = 9;
+const COLUMNAS_POR_FILA = 6;
+const FACTOR_PESO_METRO = 0.35;
+const METROS_POR_ROLLO = 50;
 
 let articuloActual = null;
 let modoArticuloActivo = false;
+let toastTimeouts = [];
 
-// ================= ERRORES =================
-function mostrarError(mensaje) {
-    let modal = document.getElementById('modalError');
-    if (!modal) {
-        modal = document.createElement('div');
-        modal.id = 'modalError';
-        modal.className = 'modal-error';
-        modal.innerHTML = `
-            <div class="modal-error-content">
-                <h3>ERROR</h3>
-                <p id="errorMensaje">${mensaje}</p>
-                <p style="font-size: 12px; color: #6b7280;">Contacte: <a href="mailto:soporte@juditex.com">soporte@juditex.com</a></p>
-                <button id="cerrarErrorBtn">Cerrar</button>
-            </div>
-        `;
-        document.body.appendChild(modal);
-        document.getElementById('cerrarErrorBtn').onclick = () => modal.style.display = 'none';
-    } else {
-        document.getElementById('errorMensaje').innerText = mensaje;
+// Timer de inactividad
+let inactividadTimerActivo = false;
+let tiempoInactividad;
+let modalInactividadMostrado = false;
+let countdownInterval;
+let segundosRestantes = 30;
+
+// ================= INICIALIZACION DE USUARIO =================
+function inicializarUsuario() {
+    const username = sessionStorage.getItem('username') || 'Usuario';
+    const rol = sessionStorage.getItem('rol') || 'usuario';
+    
+    const loggedUser = document.getElementById('loggedUser');
+    const userRole = document.getElementById('userRole');
+    
+    if (loggedUser) loggedUser.textContent = username;
+    if (userRole) {
+        userRole.textContent = rol === 'admin' ? 'Administrador' : 'Usuario';
+        if (rol === 'admin') {
+            userRole.style.background = '#1a5c34';
+            userRole.style.color = 'white';
+            userRole.style.padding = '2px 8px';
+            userRole.style.borderRadius = '12px';
+            userRole.style.fontSize = '10px';
+        }
     }
-    modal.style.display = 'flex';
-    setTimeout(() => modal.style.display = 'none', 4000);
+    
+    actualizarSessionTimer();
+    setInterval(actualizarSessionTimer, 60000);
 }
 
-window.alert = mostrarError;
+function actualizarSessionTimer() {
+    const loginTime = parseInt(sessionStorage.getItem('loginTime'));
+    const timerEl = document.getElementById('sessionTimer');
+    if (loginTime && timerEl) {
+        const tiempoTranscurrido = Math.floor((Date.now() - loginTime) / 1000);
+        const tiempoRestante = Math.max(0, 420 - tiempoTranscurrido); // 7 minutos = 420 segundos
+        const horas = Math.floor(tiempoRestante / 3600);
+        const minutos = Math.floor((tiempoRestante % 3600) / 60);
+        timerEl.textContent = `${horas.toString().padStart(2, '0')}:${minutos.toString().padStart(2, '0')}`;
+    }
+}
 
-// ================= BUSCADOR GENERICO =================
+// ================= TIMER DE INACTIVIDAD =================
+function iniciarTimerInactividad() {
+    if (inactividadTimerActivo) return;
+    inactividadTimerActivo = true;
+    
+    function resetear() {
+        clearTimeout(tiempoInactividad);
+        clearInterval(countdownInterval);
+        if (modalInactividadMostrado) {
+            document.getElementById('modalInactividad').style.display = 'none';
+            modalInactividadMostrado = false;
+        }
+        segundosRestantes = 30;
+        tiempoInactividad = setTimeout(mostrarModalInactividad, 300000);
+    }
+    
+    function mostrarModalInactividad() {
+        if (sessionStorage.getItem('loggedIn') !== 'true') return;
+        document.getElementById('modalInactividad').style.display = 'flex';
+        modalInactividadMostrado = true;
+        document.getElementById('inactividadCountdown').textContent = segundosRestantes;
+        
+        countdownInterval = setInterval(function() {
+            segundosRestantes--;
+            document.getElementById('inactividadCountdown').textContent = segundosRestantes;
+            if (segundosRestantes <= 0) {
+                clearInterval(countdownInterval);
+                sessionStorage.setItem('fromLogout', 'true');
+                sessionStorage.clear();
+                window.location.replace('login.html');
+            }
+        }, 1000);
+    }
+    
+    ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click', 'keypress'].forEach(evento => {
+        document.addEventListener(evento, resetear);
+    });
+    
+    resetear();
+}
+
+window.continuarSesion = function() {
+    clearInterval(countdownInterval);
+    document.getElementById('modalInactividad').style.display = 'none';
+    modalInactividadMostrado = false;
+    segundosRestantes = 30;
+    showToast('Sesión continuada', 'success');
+    clearTimeout(tiempoInactividad);
+    tiempoInactividad = setTimeout(() => {
+        if (sessionStorage.getItem('loggedIn') === 'true') {
+            document.getElementById('modalInactividad').style.display = 'flex';
+            modalInactividadMostrado = true;
+        }
+    }, 300000);
+};
+
+// ================= SISTEMA DE TOAST =================
+function showToast(message, type = 'info', title = '', duration = 4000) {
+    const container = document.getElementById('toastContainer');
+    const template = document.getElementById('toastTemplate');
+    if (!container || !template) return;
+    
+    const toast = template.content.cloneNode(true);
+    const toastDiv = toast.querySelector('.toast');
+    const icon = toast.querySelector('.toast-icon');
+    const titleEl = toast.querySelector('.toast-title');
+    const messageEl = toast.querySelector('.toast-message');
+    const closeBtn = toast.querySelector('.toast-close');
+    
+    toastDiv.classList.add(type);
+    const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', warning: 'fa-exclamation-triangle', info: 'fa-info-circle' };
+    icon.className = `toast-icon fas ${icons[type] || icons.info}`;
+    const titles = { success: '¡Éxito!', error: 'Error', warning: 'Advertencia', info: 'Información' };
+    titleEl.textContent = title || titles[type] || '';
+    messageEl.textContent = message;
+    
+    const timeout = setTimeout(() => { if (toastDiv.parentNode) toastDiv.remove(); }, duration);
+    toastTimeouts.push(timeout);
+    closeBtn.addEventListener('click', () => { clearTimeout(timeout); toastDiv.remove(); });
+    container.appendChild(toast);
+}
+
+// ================= FUNCIONES DE ERROR =================
+function mostrarError(mensaje) {
+    console.error(mensaje);
+    showToast(mensaje, 'error');
+    const modal = document.getElementById('modalError');
+    const errorMensaje = document.getElementById('errorMensaje');
+    if (modal && errorMensaje) {
+        errorMensaje.textContent = mensaje;
+        modal.style.display = 'flex';
+        setTimeout(() => modal.style.display = 'none', 5000);
+    }
+}
+
+// ================= BUSCADOR =================
 class Buscador {
-    constructor(inputId, sugerenciasId, items, onSelect, displayFn = null, esOtro = false) {
+    constructor(inputId, sugerenciasId, items, onSelect, displayFn = null) {
         this.input = document.getElementById(inputId);
         this.sugerenciasDiv = document.getElementById(sugerenciasId);
         this.items = items;
@@ -782,137 +897,98 @@ class Buscador {
         this.displayFn = displayFn || ((item) => item.codigo ? `${item.codigo} - ${item.nombre}` : item.nombre);
         this.filtradas = [];
         this.indiceSeleccionado = -1;
-        this.esOtro = esOtro;
-        
+        this.setupEventListeners();
+    }
+    
+    setupEventListeners() {
         this.input.addEventListener('input', () => this.buscar());
         this.input.addEventListener('keydown', (e) => this.teclado(e));
-        document.addEventListener('click', (e) => {
-            if (!this.input.contains(e.target) && !this.sugerenciasDiv.contains(e.target)) {
-                this.ocultar();
-            }
-        });
+        this.input.addEventListener('focus', () => { if (this.input.value.trim() !== '') this.buscar(); });
+        const clearBtn = this.input.parentElement?.querySelector('.clear-input');
+        if (clearBtn) clearBtn.addEventListener('click', () => { this.input.value = ''; this.ocultar(); this.input.focus(); });
+        document.addEventListener('click', (e) => { if (!this.input.contains(e.target) && !this.sugerenciasDiv.contains(e.target)) this.ocultar(); });
     }
     
     buscar() {
         const texto = this.input.value.toLowerCase().trim();
         this.sugerenciasDiv.innerHTML = '';
         this.indiceSeleccionado = -1;
+        if (texto === '') { this.ocultar(); return; }
         
-        if (texto === '') {
-            this.ocultar();
-            return;
-        }
+        this.filtradas = this.items.filter(item => item.codigo !== 'OTRO' && (item.nombre.toLowerCase().includes(texto) || (item.codigo && item.codigo.toLowerCase().includes(texto))));
+        this.filtradas.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'sugerencia-item';
+            div.textContent = this.displayFn(item);
+            div.onclick = () => this.seleccionarItem(item);
+            this.sugerenciasDiv.appendChild(div);
+        });
         
-        this.filtradas = this.items.filter(item => 
-            item.codigo !== 'OTRO' && (
-                item.nombre.toLowerCase().includes(texto) || 
-                (item.codigo && item.codigo.toLowerCase().includes(texto))
-            )
-        );
-        
-        if (this.filtradas.length > 0) {
-            this.mostrar();
-        }
-        
-        // Siempre mostrar opcion "OTRO" para ingresar manual
         const divOtro = document.createElement('div');
         divOtro.className = 'sugerencia-item otro';
-        divOtro.textContent = `✏️ ESCRIBIR MANUAL: "${texto.toUpperCase()}"`;
-        divOtro.onclick = () => {
-            this.onSelect({ codigo: texto.toUpperCase(), nombre: texto.toUpperCase(), esNuevo: true });
-            this.input.value = texto.toUpperCase();
-            this.ocultar();
-        };
+        divOtro.innerHTML = `<i class="fas fa-pencil-alt"></i> ESCRIBIR MANUAL: "${texto.toUpperCase()}"`;
+        divOtro.onclick = () => this.seleccionarItem({ codigo: texto.toUpperCase(), nombre: texto.toUpperCase(), esNuevo: true });
         this.sugerenciasDiv.appendChild(divOtro);
         this.sugerenciasDiv.style.display = 'block';
     }
     
-    mostrar() {
-        this.filtradas.forEach((item, idx) => {
-            const div = document.createElement('div');
-            div.className = 'sugerencia-item';
-            div.textContent = this.displayFn(item);
-            div.onclick = () => {
-                this.onSelect(item);
-                this.input.value = this.displayFn(item);
-                this.ocultar();
-            };
-            this.sugerenciasDiv.appendChild(div);
-        });
-    }
+    seleccionarItem(item) { this.onSelect(item); this.input.value = this.displayFn(item); this.ocultar(); }
     
     teclado(e) {
         if (this.sugerenciasDiv.style.display !== 'block') return;
-        
         const items = this.sugerenciasDiv.querySelectorAll('.sugerencia-item');
-        if (e.key === 'ArrowDown') {
-            e.preventDefault();
-            this.indiceSeleccionado = Math.min(this.indiceSeleccionado + 1, items.length - 1);
-            this.resaltarSeleccionado(items);
-        } else if (e.key === 'ArrowUp') {
-            e.preventDefault();
-            this.indiceSeleccionado = Math.max(this.indiceSeleccionado - 1, -1);
-            this.resaltarSeleccionado(items);
-        } else if (e.key === 'Enter') {
-            e.preventDefault();
-            if (this.indiceSeleccionado >= 0 && items[this.indiceSeleccionado]) {
-                items[this.indiceSeleccionado].click();
-            }
-        }
+        if (e.key === 'ArrowDown') { e.preventDefault(); this.indiceSeleccionado = Math.min(this.indiceSeleccionado + 1, items.length - 1); this.resaltarSeleccionado(items); }
+        else if (e.key === 'ArrowUp') { e.preventDefault(); this.indiceSeleccionado = Math.max(this.indiceSeleccionado - 1, -1); this.resaltarSeleccionado(items); }
+        else if (e.key === 'Enter') { e.preventDefault(); if (this.indiceSeleccionado >= 0 && items[this.indiceSeleccionado]) items[this.indiceSeleccionado].click(); }
+        else if (e.key === 'Escape') this.ocultar();
     }
     
-    resaltarSeleccionado(items) {
-        items.forEach((item, idx) => {
-            if (idx === this.indiceSeleccionado) {
-                item.style.background = '#e5e7eb';
-            } else {
-                item.style.background = '';
-            }
-        });
-    }
-    
-    ocultar() {
-        this.sugerenciasDiv.style.display = 'none';
-        this.indiceSeleccionado = -1;
-    }
+    resaltarSeleccionado(items) { items.forEach((item, idx) => item.style.background = idx === this.indiceSeleccionado ? '#e5e7eb' : ''); }
+    ocultar() { this.sugerenciasDiv.style.display = 'none'; this.indiceSeleccionado = -1; }
 }
 
-// ================= INICIALIZACION =================
+// ================= INICIALIZACIÓN PRINCIPAL =================
 document.addEventListener('DOMContentLoaded', () => {
-    const fecha = new Date().toLocaleDateString('es-ES');
-    document.getElementById('fechaActual1').textContent = fecha;
-    document.getElementById('fechaActual2').textContent = fecha;
+    inicializarUsuario();
+    iniciarTimerInactividad();
     
     configurarImagenCargo();
     
-    // Buscador de clientes
-    new Buscador('clienteInput', 'clienteSugerencias', 
-        clientesLista,
-        (item) => {
-            document.getElementById('clienteNombre').innerText = item.nombre;
+    new Buscador('clienteInput', 'clienteSugerencias', clientesLista,
+        (item) => { 
+            document.getElementById('clienteNombre').innerText = item.nombre; 
+            actualizarPaso(1); 
+            showToast(`Cliente: ${item.nombre}`, 'success'); 
         },
         (item) => item.nombre
     );
     
-    // Buscador de articulos
-    new Buscador('articuloInput', 'articuloSugerencias', 
-        articulosLista,
-        (item) => {
-            document.getElementById('codigoArticuloHidden').value = item.codigo;
-            document.getElementById('empresaArticuloHidden').value = item.empresa || '';
-            document.getElementById('nombreArticulo').innerHTML = item.nombre;
+    new Buscador('articuloInput', 'articuloSugerencias', articulosLista,
+        (item) => { 
+            document.getElementById('codigoArticuloHidden').value = item.codigo; 
+            document.getElementById('nombreArticulo').innerHTML = item.nombre; 
+            actualizarPaso(3); 
         },
         (item) => item.codigo ? `${item.codigo} - ${item.nombre}` : item.nombre
     );
     
     setupEventListeners();
+    setupKeyboardShortcuts();
+    setupModalClose();
+    
     render();
     actualizarModoArticulo();
+    actualizarEstadisticas();
+    
+    const username = sessionStorage.getItem('username') || 'Usuario';
+    showToast(`Bienvenido ${username}`, 'success', '¡Hola!');
 });
 
+// ================= CONFIGURACIÓN DE EVENTOS =================
 function setupEventListeners() {
     document.getElementById('vendedorSelect').addEventListener('change', function() {
         document.getElementById('vendedorNombre').innerText = this.value || '—';
+        if (this.value) { actualizarPaso(2); showToast(`Vendedor: ${this.value}`, 'success'); }
     });
     
     document.getElementById('cantidadInput').addEventListener('paste', function(e) {
@@ -921,109 +997,163 @@ function setupEventListeners() {
     });
     
     document.getElementById('cantidadInput').addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            procesarCantidad();
-        }
+        if (e.key === 'Enter') { e.preventDefault(); procesarCantidad(); }
     });
     
     document.getElementById('btnAgregar').addEventListener('click', procesarCantidad);
     document.getElementById('btnLimpiar').addEventListener('click', mostrarModalLimpiar);
     document.getElementById('btnGrabar').addEventListener('click', grabarLista);
-    document.getElementById('btnSalir').addEventListener('click', function() {
-        document.getElementById('modalSalir').style.display = 'flex';
-    });
+    document.getElementById('btnSalir').addEventListener('click', () => document.getElementById('modalSalir').style.display = 'flex');
     
-    // Botones del modal de grabacion
-    document.getElementById('btnVolverEditar').addEventListener('click', function() {
-        document.getElementById('modalGrabar').style.display = 'none';
-    });
+    const helpBtn = document.getElementById('helpButton');
+    if (helpBtn) helpBtn.addEventListener('click', () => document.getElementById('modalAyuda').style.display = 'flex');
     
-    document.getElementById('btnGenerarPDF').addEventListener('click', function() {
-        document.getElementById('modalGrabar').style.display = 'none';
-        generarPDF();
-    });
+    document.getElementById('duplicarUltimo').addEventListener('click', duplicarUltimoArticulo);
+    document.getElementById('exportarExcel').addEventListener('click', exportarAExcel);
     
-    document.getElementById('btnImprimirGrabar').addEventListener('click', function() {
-        document.getElementById('modalGrabar').style.display = 'none';
-        imprimir();
-    });
+    document.getElementById('btnVolverEditar').addEventListener('click', () => document.getElementById('modalGrabar').style.display = 'none');
+    document.getElementById('btnGenerarPDF').addEventListener('click', () => { document.getElementById('modalGrabar').style.display = 'none'; generarPDF(); });
+    document.getElementById('btnImprimirGrabar').addEventListener('click', () => { document.getElementById('modalGrabar').style.display = 'none'; imprimir(); });
     
-    // Cerrar modal de grabacion al hacer click fuera
-    document.getElementById('modalGrabar').addEventListener('click', function(e) {
-        if (e.target === document.getElementById('modalGrabar')) {
-            document.getElementById('modalGrabar').style.display = 'none';
-        }
-    });
-    
-    // Botones del modal de limpiar
     document.getElementById('cancelarLimpiar').addEventListener('click', ocultarModalLimpiar);
-    document.getElementById('confirmarLimpiar').addEventListener('click', function() { 
-        limpiar(); 
-        ocultarModalLimpiar(); 
+    document.getElementById('confirmarLimpiar').addEventListener('click', () => { limpiar(); ocultarModalLimpiar(); showToast('Lista limpiada', 'info'); });
+    
+    const cerrarErrorBtn = document.getElementById('cerrarErrorBtn');
+    if (cerrarErrorBtn) cerrarErrorBtn.addEventListener('click', () => document.getElementById('modalError').style.display = 'none');
+}
+
+function setupKeyboardShortcuts() {
+    document.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && e.key === 'l') { e.preventDefault(); mostrarModalLimpiar(); }
+        if (e.ctrlKey && e.key === 'g') { e.preventDefault(); grabarLista(); }
+        if (e.ctrlKey && e.key === 'p') { e.preventDefault(); imprimir(); }
+        if (e.ctrlKey && e.key === 'd') { e.preventDefault(); duplicarUltimoArticulo(); }
+        if (e.key === 'Escape') cerrarTodosModales();
     });
 }
 
-// ================= FUNCION GRABAR =================
+function setupModalClose() {
+    ['modalGrabar', 'modalConfirmacion', 'modalSalir', 'modalError', 'modalAyuda'].forEach(id => {
+        const modal = document.getElementById(id);
+        if (modal) modal.addEventListener('click', (e) => { if (e.target === modal) modal.style.display = 'none'; });
+    });
+}
+
+function cerrarTodosModales() {
+    document.querySelectorAll('[id^="modal"]').forEach(modal => { 
+        if (modal.id !== 'modalInactividad') modal.style.display = 'none'; 
+    });
+}
+
+// ================= ACTUALIZACIÓN DE PASOS =================
+function actualizarPaso(paso) {
+    document.querySelectorAll('.step').forEach((step, index) => {
+        step.classList.remove('active', 'completed');
+        if (index + 1 < paso) step.classList.add('completed');
+        else if (index + 1 === paso) step.classList.add('active');
+    });
+}
+
+// ================= ESTADÍSTICAS =================
+function actualizarEstadisticas() {
+    const pesoEl = document.getElementById('pesoEstimado');
+    const rollosEl = document.getElementById('rollosEstimados');
+    const promedioEl = document.getElementById('promedioArticulo');
+    const metrosEl = document.getElementById('metrosTotalesStats');
+    const prendasEl = document.getElementById('prendasTotales');
+    const cantidadesEl = document.getElementById('cantidadesTotales');
+    
+    if (pesoEl) pesoEl.textContent = `${(totalMetros * FACTOR_PESO_METRO).toFixed(2)} kg`;
+    if (rollosEl) rollosEl.textContent = Math.ceil(totalMetros / METROS_POR_ROLLO);
+    if (promedioEl) promedioEl.textContent = `${lista.length > 0 ? (totalMetros / lista.length).toFixed(2) : '0.00'} m`;
+    if (metrosEl) metrosEl.textContent = `${totalMetros.toFixed(2)} m`;
+    if (prendasEl) prendasEl.textContent = lista.filter(item => item.prenda && item.prenda.trim() !== '').length;
+    if (cantidadesEl) cantidadesEl.textContent = lista.reduce((acc, item) => acc + item.cantidades.length, 0);
+}
+
+// ================= DUPLICAR Y EXPORTAR =================
+function duplicarUltimoArticulo() {
+    if (lista.length === 0) { mostrarError('No hay artículos para duplicar'); return; }
+    if (lista.length >= MAX_ITEMS) { mostrarError(`Límite alcanzado: máximo ${MAX_ITEMS} artículos`); return; }
+    const duplicado = JSON.parse(JSON.stringify(lista[lista.length - 1]));
+    lista.push(duplicado);
+    totalMetros += parseFloat(duplicado.cantidadTotal);
+    render(); 
+    actualizarEstadisticas();
+    showToast('Artículo duplicado', 'success');
+}
+
+function exportarAExcel() {
+    if (lista.length === 0) { mostrarError('No hay artículos para exportar'); return; }
+    let csv = 'Artículo,Código,Prenda,Cantidades,Total\n';
+    lista.forEach(item => csv += `"${item.nombre}","${item.codigo}","${item.prenda || ''}","${item.cantidades.join(' | ')}","${item.cantidadTotal}"\n`);
+    csv += `\n"TOTAL",,,,"${totalMetros.toFixed(2)}"`;
+    
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `Packing_List_${new Date().getTime()}.csv`;
+    document.body.appendChild(link); 
+    link.click(); 
+    document.body.removeChild(link);
+    showToast('Archivo Excel generado', 'success');
+}
+
+// ================= FUNCIONES PRINCIPALES =================
 function grabarLista() {
-    // Validaciones
     const cliente = document.getElementById('clienteNombre').innerText;
     const vendedor = document.getElementById('vendedorNombre').innerText;
     
-    if (cliente === '—' || cliente === '') {
-        mostrarError('Seleccione un cliente');
-        return;
-    }
+    if (cliente === '—' || cliente === '') { mostrarError('Seleccione un cliente'); return; }
+    if (vendedor === '—' || vendedor === '') { mostrarError('Seleccione un vendedor'); return; }
+    if (lista.length === 0 && !modoArticuloActivo) { mostrarError('Agregue al menos un artículo'); return; }
     
-    if (vendedor === '—' || vendedor === '') {
-        mostrarError('Seleccione un vendedor');
-        return;
-    }
-    
-    if (lista.length === 0 && !modoArticuloActivo) {
-        mostrarError('Agregue al menos un articulo');
-        return;
-    }
-    
-    // Si hay un articulo en proceso, preguntar si desea finalizarlo
     if (modoArticuloActivo && articuloActual && articuloActual.cantidades.length > 0) {
-        if (confirm('Hay un articulo en proceso. ¿Desea finalizarlo y agregarlo a la lista?')) {
-            finalizarArticuloActual();
-        } else {
-            return;
-        }
+        if (confirm('Hay un artículo en proceso. ¿Desea finalizarlo y agregarlo a la lista?')) finalizarArticuloActual();
+        else return;
     }
     
-    // Llenar el modal de resumen
     document.getElementById('resumenCliente').innerText = cliente;
     document.getElementById('resumenVendedor').innerText = vendedor;
     document.getElementById('resumenTotal').innerText = totalMetros.toFixed(2);
     
-    // Llenar tabla de resumen
     const tbody = document.getElementById('resumenTablaBody');
     tbody.innerHTML = '';
-    
     lista.forEach(item => {
         const row = document.createElement('tr');
-        
-        const cantidadesTexto = item.cantidades.map(c => c.toFixed(2)).join(' / ');
-        const prendaMostrar = (item.prenda && item.prenda !== '') ? item.prenda : '—';
-        
-        row.innerHTML = `
-            <td><strong>${item.nombre}</strong></td>
-            <td>${prendaMostrar}</td>
-            <td style="font-size: 11px;">${cantidadesTexto}</td>
-            <td><strong>${item.cantidadTotal}</strong></td>
-        `;
-        
+        row.innerHTML = `<td><strong>${item.nombre}</strong></td><td>${item.prenda || '—'}</td><td style="font-size:11px;">${item.cantidades.map(c => c.toFixed(2)).join(' / ')}</td><td><strong>${item.cantidadTotal}</strong></td>`;
         tbody.appendChild(row);
     });
     
-    // Mostrar el modal
     document.getElementById('modalGrabar').style.display = 'flex';
+    actualizarPaso(4);
 }
 
-// ================= PROCESAR CANTIDADES =================
+function iniciarNuevoArticulo() {
+    let cod = document.getElementById('codigoArticuloHidden').value;
+    let nombre = document.getElementById('nombreArticulo').innerHTML;
+    let prendaValor = document.getElementById('prendaInput').value.trim().toUpperCase();
+    
+    if (!cod || !nombre || nombre === 'Ingrese o seleccione un artículo') {
+        let articuloInputValue = document.getElementById('articuloInput').value.trim().toUpperCase();
+        if (articuloInputValue !== '') { 
+            cod = articuloInputValue; 
+            nombre = articuloInputValue; 
+            document.getElementById('codigoArticuloHidden').value = cod; 
+            document.getElementById('nombreArticulo').innerHTML = nombre; 
+        }
+        else { mostrarError('Seleccione o escriba un artículo'); return false; }
+    }
+    
+    if (lista.length >= MAX_ITEMS) { mostrarError(`Límite alcanzado: máximo ${MAX_ITEMS} artículos`); return false; }
+    
+    if (validarArticuloDuplicado(cod)) return false;
+    
+    articuloActual = { codigo: cod, nombre: nombre, cantidades: [], prenda: prendaValor };
+    modoArticuloActivo = true;
+    return true;
+}
+
 function procesarPegado(data) {
     let numeros = data.split(/[\s,\t\n]+/).filter(n => n.trim() !== '');
     let agregadas = 0;
@@ -1031,23 +1161,7 @@ function procesarPegado(data) {
     numeros.forEach(num => {
         let cant = parseFloat(num);
         if (!isNaN(cant) && cant > 0) {
-            if (!modoArticuloActivo) {
-                let cod = document.getElementById('codigoArticuloHidden').value;
-                let nombre = document.getElementById('nombreArticulo').innerHTML;
-                let empresa = document.getElementById('empresaArticuloHidden').value;
-                let prendaValor = document.getElementById('prendaInput').value.trim().toUpperCase();
-                
-                if (cod && nombre && nombre !== 'Ingrese o seleccione un articulo' && lista.length < MAX_ITEMS) {
-                    articuloActual = {
-                        codigo: cod,
-                        nombre: nombre,
-                        empresa: empresa,
-                        cantidades: [],
-                        prenda: prendaValor
-                    };
-                    modoArticuloActivo = true;
-                }
-            }
+            if (!modoArticuloActivo && !iniciarNuevoArticulo()) return;
             if (modoArticuloActivo && articuloActual && articuloActual.cantidades.length < MAX_FILAS_POR_ARTICULO * COLUMNAS_POR_FILA) {
                 articuloActual.cantidades.push(cant);
                 agregadas++;
@@ -1055,70 +1169,30 @@ function procesarPegado(data) {
         }
     });
     
-    if (agregadas === 0 && numeros.length > 0) {
-        mostrarError('No se encontraron numeros validos');
-    }
-    
     if (agregadas > 0) {
         document.getElementById('cantidadInput').value = '';
         document.getElementById('prendaInput').value = '';
-        actualizarModoArticulo();
-        mostrarCantidadesTemporales();
+        actualizarModoArticulo(); 
+        mostrarCantidadesTemporales(); 
+        actualizarEstadisticas();
+        showToast(`${agregadas} cantidades agregadas`, 'success');
+    } else if (numeros.length > 0) {
+        mostrarError('No se encontraron números válidos');
     }
 }
 
 function procesarCantidad() {
     let valor = document.getElementById('cantidadInput').value.trim();
-    let prendaValor = document.getElementById('prendaInput').value.trim().toUpperCase();
     
-    if (valor === '0') {
-        finalizarArticuloActual();
-        return;
-    }
+    if (valor === '0') { finalizarArticuloActual(); return; }
     
     let cant = parseFloat(valor);
-    if (isNaN(cant) || cant <= 0) {
-        mostrarError('Ingrese cantidad valida (>0) o 0 para finalizar');
-        return;
-    }
+    if (isNaN(cant) || cant <= 0) { mostrarError('Ingrese cantidad válida (>0) o 0 para finalizar'); return; }
     
-    if (!modoArticuloActivo) {
-        let cod = document.getElementById('codigoArticuloHidden').value;
-        let nombre = document.getElementById('nombreArticulo').innerHTML;
-        let empresa = document.getElementById('empresaArticuloHidden').value;
-        
-        if (!cod || !nombre || nombre === 'Ingrese o seleccione un articulo') {
-            let articuloInputValue = document.getElementById('articuloInput').value.trim().toUpperCase();
-            if (articuloInputValue !== '') {
-                cod = articuloInputValue;
-                nombre = articuloInputValue;
-                empresa = '';
-                document.getElementById('codigoArticuloHidden').value = cod;
-                document.getElementById('nombreArticulo').innerHTML = nombre;
-            } else {
-                mostrarError('Seleccione o escriba un articulo');
-                return;
-            }
-        }
-        
-        if (lista.length >= MAX_ITEMS) {
-            mostrarError('Limite alcanzado: maximo ' + MAX_ITEMS + ' articulos');
-            return;
-        }
-        
-        articuloActual = {
-            codigo: cod,
-            nombre: nombre,
-            empresa: empresa,
-            cantidades: [],
-            prenda: prendaValor
-        };
-        modoArticuloActivo = true;
-    }
+    if (!modoArticuloActivo && !iniciarNuevoArticulo()) return;
     
-    const maxTotal = MAX_FILAS_POR_ARTICULO * COLUMNAS_POR_FILA;
-    if (articuloActual.cantidades.length >= maxTotal) {
-        mostrarError('Maximo ' + maxTotal + ' cantidades. Presione 0 para finalizar.');
+    if (articuloActual.cantidades.length >= MAX_FILAS_POR_ARTICULO * COLUMNAS_POR_FILA) {
+        mostrarError(`Máximo ${MAX_FILAS_POR_ARTICULO * COLUMNAS_POR_FILA} cantidades. Presione 0 para finalizar.`);
         return;
     }
     
@@ -1126,13 +1200,15 @@ function procesarCantidad() {
     document.getElementById('cantidadInput').value = '';
     document.getElementById('prendaInput').value = '';
     document.getElementById('cantidadInput').focus();
-    actualizarModoArticulo();
-    mostrarCantidadesTemporales();
+    
+    actualizarModoArticulo(); 
+    mostrarCantidadesTemporales(); 
+    actualizarEstadisticas();
 }
 
 function finalizarArticuloActual() {
     if (!modoArticuloActivo || !articuloActual || articuloActual.cantidades.length === 0) {
-        mostrarError('No hay articulo activo para finalizar');
+        mostrarError('No hay artículo activo para finalizar'); 
         return;
     }
     
@@ -1140,132 +1216,105 @@ function finalizarArticuloActual() {
     totalMetros += totalArticulo;
     
     lista.push({
-        nombre: articuloActual.nombre,
+        nombre: articuloActual.nombre, 
         codigo: articuloActual.codigo,
-        empresa: articuloActual.empresa || '',
-        cantidades: [...articuloActual.cantidades],
+        cantidades: [...articuloActual.cantidades], 
         cantidadTotal: totalArticulo.toFixed(2),
         prenda: articuloActual.prenda || ''
     });
     
-    articuloActual = null;
+    articuloActual = null; 
     modoArticuloActivo = false;
     
     document.getElementById('codigoArticuloHidden').value = '';
-    document.getElementById('empresaArticuloHidden').value = '';
     document.getElementById('articuloInput').value = '';
-    document.getElementById('nombreArticulo').innerHTML = 'Ingrese o seleccione un articulo';
+    document.getElementById('nombreArticulo').innerHTML = 'Ingrese o seleccione un artículo';
     document.getElementById('cantidadInput').value = '';
     document.getElementById('prendaInput').value = '';
     document.getElementById('articuloInput').focus();
     
-    actualizarModoArticulo();
+    actualizarModoArticulo(); 
+    actualizarEstadisticas(); 
     render();
+    showToast('Artículo finalizado', 'success');
 }
 
-function mostrarCantidadesTemporales() {
-    if (!modoArticuloActivo || !articuloActual) return;
-    let tbody = document.querySelector('#tabla tbody');
-    if (!tbody) return;
-    let html = '';
-    lista.forEach((item, idx) => { html += generarFilaArticulo(item, idx); });
-    html += generarFilaArticuloTemporal();
-    tbody.innerHTML = html;
-    document.getElementById('total').innerText = totalMetros.toFixed(2);
-    document.getElementById('cantidad').innerText = lista.length;
-}
+function mostrarCantidadesTemporales() { render(); }
 
 function generarFilaArticuloTemporal() {
     if (!articuloActual) return '';
-    const maxTotal = MAX_FILAS_POR_ARTICULO * COLUMNAS_POR_FILA;
     const subtotal = articuloActual.cantidades.reduce((s, c) => s + c, 0);
-    let prendaMostrar = (articuloActual.prenda && articuloActual.prenda !== '') ? articuloActual.prenda : '—';
+    const maxTotal = MAX_FILAS_POR_ARTICULO * COLUMNAS_POR_FILA;
     
-    let html = `<tr style="background:#f9fafb;">
-        <td>
-            <strong>${articuloActual.nombre}</strong>
-            <span style="background:#6b7280;color:white;padding:2px 8px;border-radius:12px;font-size:10px;margin-left:10px;">EN PROCESO (${articuloActual.cantidades.length}/${maxTotal})</span>
-            <div style="margin-top:8px;padding:8px;">`;
+    let html = `<tr style="background:#f9fafb;"><td><strong>${articuloActual.nombre}</strong><span style="background:#6b7280;color:white;padding:2px 8px;border-radius:12px;font-size:10px;margin-left:10px;">EN PROCESO (${articuloActual.cantidades.length}/${maxTotal})</span><div style="margin-top:8px;padding:8px;">`;
     
     for (let i = 0; i < articuloActual.cantidades.length; i += COLUMNAS_POR_FILA) {
-        html += '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:3px;">';
+        html += '<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:3px;">';
         for (let j = 0; j < COLUMNAS_POR_FILA; j++) {
             html += (i+j < articuloActual.cantidades.length) ? `<span>${articuloActual.cantidades[i+j].toFixed(2)}</span>` : '<span></span>';
         }
         html += '</div>';
     }
     
-    html += `</div>
-            <div style="margin-top:8px;font-weight:bold;text-align:right;">Subtotal: ${subtotal.toFixed(2)}</div>
-        </td>
-        <td>${subtotal.toFixed(2)}</td>
-        <td>${prendaMostrar}</td>
-        <td><button onclick="cancelarArticuloActual()" style="background:#6b7280;color:white;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;">Cancelar</button></td>
-    </tr>`;
+    html += `</div><div style="margin-top:8px;font-weight:bold;text-align:right;">Subtotal: ${subtotal.toFixed(2)}</div></td><td>${subtotal.toFixed(2)}</td><td>${articuloActual.prenda || '—'}</td><td><button onclick="cancelarArticuloActual()" style="background:#6b7280;color:white;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;">Cancelar</button></td></tr>`;
     return html;
 }
 
 function cancelarArticuloActual() {
-    if (confirm('¿Cancelar articulo en proceso?')) {
-        articuloActual = null;
+    if (confirm('¿Cancelar artículo en proceso?')) {
+        articuloActual = null; 
         modoArticuloActivo = false;
         document.getElementById('codigoArticuloHidden').value = '';
-        document.getElementById('empresaArticuloHidden').value = '';
         document.getElementById('articuloInput').value = '';
-        document.getElementById('nombreArticulo').innerHTML = 'Ingrese o seleccione un articulo';
+        document.getElementById('nombreArticulo').innerHTML = 'Ingrese o seleccione un artículo';
         document.getElementById('cantidadInput').value = '';
         document.getElementById('prendaInput').value = '';
         document.getElementById('articuloInput').focus();
-        actualizarModoArticulo();
+        actualizarModoArticulo(); 
         render();
     }
 }
+window.cancelarArticuloActual = cancelarArticuloActual;
 
 function actualizarModoArticulo() {
     const el = document.getElementById('nombreArticulo');
     if (modoArticuloActivo && articuloActual) {
-        const subtotal = articuloActual.cantidades.reduce((s,c)=>s+c,0);
+        const subtotal = articuloActual.cantidades.reduce((s,c) => s + c, 0);
         el.innerHTML = `${articuloActual.nombre} | ${articuloActual.cantidades.length} cantidades | Subtotal: ${subtotal.toFixed(2)}<br><small>Ingrese cantidades o 0 para finalizar</small>`;
-        el.style.background = '#f9fafb';
+        el.style.background = '#f9fafb'; 
         el.style.padding = '10px';
     } else {
-        el.innerHTML = 'Ingrese o seleccione un articulo';
-        el.style.background = '';
+        el.innerHTML = 'Ingrese o seleccione un artículo';
+        el.style.background = ''; 
         el.style.padding = '';
     }
 }
 
 function generarFilaArticulo(item, idx) {
-    let prendaMostrar = (item.prenda && item.prenda !== '') ? item.prenda : '—';
-    let html = `<tr>
-        <td><strong>${item.nombre}</strong>
-            <div style="margin-top:8px;padding:8px;">`;
+    let html = `<tr><td><strong>${item.nombre}</strong><div style="margin-top:8px;padding:8px;">`;
     
     for (let i = 0; i < item.cantidades.length; i += COLUMNAS_POR_FILA) {
-        html += '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:3px;">';
+        html += '<div style="display:grid;grid-template-columns:repeat(6,1fr);gap:3px;">';
         for (let j = 0; j < COLUMNAS_POR_FILA; j++) {
             html += (i+j < item.cantidades.length) ? `<span>${item.cantidades[i+j].toFixed(2)}</span>` : '<span></span>';
         }
         html += '</div>';
     }
     
-    html += `</div>
-            <div style="margin-top:8px;font-weight:bold;text-align:right;">Subtotal: ${item.cantidadTotal}</div>
-        </td>
-        <td>${item.cantidadTotal}</td>
-        <td>${prendaMostrar}</td>
-        <td><button onclick="eliminarItem(${idx})" style="background:#991b1b;color:white;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;">Eliminar</button></td>
-    </tr>`;
+    html += `</div><div style="margin-top:8px;font-weight:bold;text-align:right;">Subtotal: ${item.cantidadTotal}</div></td><td>${item.cantidadTotal}</td><td>${item.prenda || '—'}</td><td><button onclick="eliminarItem(${idx})" style="background:#991b1b;color:white;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;"><i class="fas fa-trash"></i> Eliminar</button></td></tr>`;
     return html;
 }
 
 function eliminarItem(index) {
-    if (confirm('¿Eliminar ' + lista[index].nombre + '?')) {
+    if (confirm('¿Eliminar este artículo?')) {
         totalMetros -= parseFloat(lista[index].cantidadTotal);
         lista.splice(index, 1);
-        render();
+        render(); 
+        actualizarEstadisticas();
+        showToast('Artículo eliminado', 'info');
     }
 }
+window.eliminarItem = eliminarItem;
 
 function render() {
     let tbody = document.querySelector('#tabla tbody');
@@ -1273,39 +1322,46 @@ function render() {
     tbody.innerHTML = '';
     
     const tablaVacia = document.querySelector('.tabla-vacia');
-    if (tablaVacia) {
-        tablaVacia.style.display = (lista.length === 0 && !modoArticuloActivo) ? 'block' : 'none';
-    }
+    if (tablaVacia) tablaVacia.style.display = (lista.length === 0 && !modoArticuloActivo) ? 'block' : 'none';
     
-    lista.forEach((item, idx) => {
-        tbody.innerHTML += generarFilaArticulo(item, idx);
-    });
-    
-    if (modoArticuloActivo && articuloActual) {
-        tbody.innerHTML += generarFilaArticuloTemporal();
-    }
+    lista.forEach((item, idx) => tbody.innerHTML += generarFilaArticulo(item, idx));
+    if (modoArticuloActivo && articuloActual) tbody.innerHTML += generarFilaArticuloTemporal();
     
     document.getElementById('total').innerText = totalMetros.toFixed(2);
     document.getElementById('cantidad').innerText = lista.length;
     document.getElementById('progressBar').style.width = (lista.length / MAX_ITEMS) * 100 + '%';
 }
 
+// ================= FUNCIÓN CRÍTICA: generarTablaHTML =================
 function generarTablaHTML() {
-    let html = '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
-    lista.forEach(item => {
-        html += `<tr><td colspan="4" style="font-weight:bold;padding-top:8px;">${item.nombre}</td></tr>`;
-        if (item.prenda && item.prenda !== '') {
-            html += `<tr><td colspan="4" style="font-size:10px;color:#666;padding-bottom:4px;">PRENDA: ${item.prenda}</td></tr>`;
-        }
-        for (let i = 0; i < item.cantidades.length; i += COLUMNAS_POR_FILA) {
-            html += '<tr><td colspan="4"><div style="display:grid;grid-template-columns:repeat(5,1fr);gap:2px;padding:2px 0;">';
-            for (let j = 0; j < COLUMNAS_POR_FILA; j++) {
-                html += (i+j < item.cantidades.length) ? `<span>${item.cantidades[i+j].toFixed(2)}</span>` : '<span></span>';
+    let html = '<table style="width:100%;border-collapse:collapse;font-size:9px;">';
+    
+    if (lista.length === 0) {
+        html += '<tr><td style="text-align:center;padding:10px;">No hay artículos</td></tr>';
+    } else {
+        lista.forEach(item => {
+            html += `<tr><td style="font-weight:bold;padding-top:4px;font-size:10px;">${item.nombre}</td></tr>`;
+            
+            if (item.prenda && item.prenda.trim() !== '') {
+                html += `<tr><td style="font-size:8px;color:#555;padding-bottom:2px;">PRENDA: ${item.prenda}</td></tr>`;
             }
-            html += '</div></td></tr>';
-        }
-        html += `<tr><td colspan="4" style="text-align:right;border-bottom:1px solid black;padding-bottom:4px;">Subtotal: ${item.cantidadTotal}</td></tr>`;
-    });
+            
+            for (let i = 0; i < item.cantidades.length; i += COLUMNAS_POR_FILA) {
+                html += '<tr><td><div style="display:grid;grid-template-columns:repeat(6,1fr);gap:1px;padding:1px 0;">';
+                for (let j = 0; j < COLUMNAS_POR_FILA; j++) {
+                    if (i + j < item.cantidades.length) {
+                        html += `<span style="font-size:8px;">${item.cantidades[i + j].toFixed(2)}</span>`;
+                    } else {
+                        html += '<span></span>';
+                    }
+                }
+                html += '</div></td></tr>';
+            }
+            
+            html += `<tr><td style="text-align:right;border-bottom:1px solid #000;padding-bottom:3px;font-size:9px;">Subtotal: ${item.cantidadTotal}</td></tr>`;
+        });
+    }
+    
     html += '</table>';
     return html;
 }
@@ -1313,30 +1369,22 @@ function generarTablaHTML() {
 function configurarImagenCargo() {
     const img = document.getElementById('logoImagen');
     if (img) { 
-        img.src = 'CARGO.png'; 
-        img.onerror = () => img.style.display = 'none'; 
+        img.src = 'CARGO.png';
+        img.onerror = function() { this.style.display = 'none'; };
     }
 }
 
+// ================= FUNCIÓN CRÍTICA: prepararImpresion =================
 function prepararImpresion() {
     let cliente = document.getElementById('clienteNombre').innerText;
     let vendedor = document.getElementById('vendedorNombre').innerText;
     let tabla = generarTablaHTML();
     let rollos = lista.reduce((acc, item) => acc + item.cantidades.length, 0);
     
-    const primerArticulo = lista[0];
-    const empresaContainer = document.getElementById('empresaContainer');
-    const empresaValor = document.getElementById('empresaValor');
+    if (cliente === '—' || cliente === '') cliente = 'NO ESPECIFICADO';
+    if (vendedor === '—' || vendedor === '') vendedor = 'NO ESPECIFICADO';
     
-    if (empresaContainer && empresaValor) {
-        if (primerArticulo && primerArticulo.codigo === '1' && primerArticulo.empresa) {
-            empresaValor.textContent = primerArticulo.empresa;
-            empresaContainer.style.display = 'block';
-        } else {
-            empresaContainer.style.display = 'none';
-        }
-    }
-    
+    // Primera copia
     const pLista = document.getElementById('p_lista');
     const pTotal = document.getElementById('p_total');
     const pCliente = document.getElementById('p_cliente');
@@ -1344,11 +1392,12 @@ function prepararImpresion() {
     const pRollos = document.getElementById('p_rollos');
     
     if (pLista) pLista.innerHTML = tabla;
-    if (pTotal) pTotal.innerText = totalMetros.toFixed(2);
-    if (pCliente) pCliente.innerText = cliente;
-    if (pVendedor) pVendedor.innerText = vendedor;
-    if (pRollos) pRollos.innerText = rollos;
+    if (pTotal) pTotal.textContent = totalMetros.toFixed(2);
+    if (pCliente) pCliente.textContent = cliente;
+    if (pVendedor) pVendedor.textContent = vendedor;
+    if (pRollos) pRollos.textContent = rollos;
     
+    // Segunda copia
     const pLista2 = document.getElementById('p_lista2');
     const pTotal2 = document.getElementById('p_total2');
     const pCliente2 = document.getElementById('p_cliente2');
@@ -1356,100 +1405,78 @@ function prepararImpresion() {
     const pRollos2 = document.getElementById('p_rollos2');
     
     if (pLista2) pLista2.innerHTML = tabla;
-    if (pTotal2) pTotal2.innerText = totalMetros.toFixed(2);
-    if (pCliente2) pCliente2.innerText = cliente;
-    if (pVendedor2) pVendedor2.innerText = vendedor;
-    if (pRollos2) pRollos2.innerText = rollos;
-    
-    const fecha = new Date().toLocaleDateString('es-ES');
-    const fecha1 = document.getElementById('fechaActual1');
-    const fecha2 = document.getElementById('fechaActual2');
-    if (fecha1) fecha1.textContent = fecha;
-    if (fecha2) fecha2.textContent = fecha;
+    if (pTotal2) pTotal2.textContent = totalMetros.toFixed(2);
+    if (pCliente2) pCliente2.textContent = cliente;
+    if (pVendedor2) pVendedor2.textContent = vendedor;
+    if (pRollos2) pRollos2.textContent = rollos;
 }
 
 function generarPDF() {
-    if (lista.length === 0) { 
-        mostrarError('Agregue al menos un articulo'); 
-        return; 
-    }
+    if (lista.length === 0) { mostrarError('Agregue al menos un artículo'); return; }
+    if (document.getElementById('clienteNombre').innerText === '—') { mostrarError('Seleccione un cliente'); return; }
+    if (document.getElementById('vendedorNombre').innerText === '—') { mostrarError('Seleccione un vendedor'); return; }
+    
     prepararImpresion();
     
-    const element = document.getElementById('printArea');
-    const opt = {
-        margin: [0.5, 0.5, 0.5, 0.5],
-        filename: 'Packing_List_' + new Date().getTime() + '.pdf',
-        image: { type: 'jpeg', quality: 1 },
-        html2canvas: { scale: 2, letterRendering: true },
-        jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
-    };
+    // Cerrar modal de grabar
+    const modalGrabar = document.getElementById('modalGrabar');
+    if (modalGrabar) modalGrabar.style.display = 'none';
     
-    html2pdf().set(opt).from(element).save();
+    // Usar window.print() que ya funciona
+    // En Chrome/Edge: el usuario selecciona "Guardar como PDF"
+    setTimeout(() => {
+        window.print();
+    }, 300);
 }
 
+// ================= IMPRIMIR DIRECTO =================
 function imprimir() {
-    if (lista.length === 0) { 
-        mostrarError('Agregue al menos un articulo'); 
-        return; 
-    }
     prepararImpresion();
-    window.print();
+    
+    // Cerrar modal de grabar
+    document.getElementById('modalGrabar').style.display = 'none';
+    
+    setTimeout(() => {
+        window.print();
+    }, 300);
 }
-
 function limpiar() {
-    lista = [];
-    totalMetros = 0;
-    articuloActual = null;
+    lista = []; 
+    totalMetros = 0; 
+    articuloActual = null; 
     modoArticuloActivo = false;
     
-    const clienteInput = document.getElementById('clienteInput');
-    const vendedorSelect = document.getElementById('vendedorSelect');
-    const articuloInput = document.getElementById('articuloInput');
-    const codigoHidden = document.getElementById('codigoArticuloHidden');
-    const empresaHidden = document.getElementById('empresaArticuloHidden');
-    const cantidadInput = document.getElementById('cantidadInput');
-    const prendaInput = document.getElementById('prendaInput');
-    const clienteNombre = document.getElementById('clienteNombre');
-    const vendedorNombre = document.getElementById('vendedorNombre');
-    const nombreArticulo = document.getElementById('nombreArticulo');
-    const empresaContainer = document.getElementById('empresaContainer');
+    ['clienteInput', 'vendedorSelect', 'articuloInput', 'cantidadInput', 'prendaInput', 'codigoArticuloHidden'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
     
-    if (clienteInput) clienteInput.value = '';
-    if (vendedorSelect) vendedorSelect.value = '';
-    if (articuloInput) articuloInput.value = '';
-    if (codigoHidden) codigoHidden.value = '';
-    if (empresaHidden) empresaHidden.value = '';
-    if (cantidadInput) cantidadInput.value = '';
-    if (prendaInput) prendaInput.value = '';
-    if (clienteNombre) clienteNombre.innerText = '—';
-    if (vendedorNombre) vendedorNombre.innerText = '—';
-    if (nombreArticulo) nombreArticulo.innerHTML = 'Ingrese o seleccione un articulo';
-    if (empresaContainer) empresaContainer.style.display = 'none';
+    document.getElementById('clienteNombre').innerText = '—';
+    document.getElementById('vendedorNombre').innerText = '—';
+    document.getElementById('nombreArticulo').innerHTML = 'Ingrese o seleccione un artículo';
     
-    actualizarModoArticulo();
+    actualizarPaso(1); 
+    actualizarModoArticulo(); 
+    actualizarEstadisticas(); 
     render();
 }
 
 function mostrarModalLimpiar() {
-    const modal = document.getElementById('modalConfirmacion');
     if (lista.length > 0 || modoArticuloActivo) {
-        if (modal) modal.style.display = 'flex';
+        document.getElementById('modalConfirmacion').style.display = 'flex';
     } else {
         limpiar();
     }
 }
 
-function ocultarModalLimpiar() {
-    const modal = document.getElementById('modalConfirmacion');
-    if (modal) modal.style.display = 'none';
+function ocultarModalLimpiar() { 
+    document.getElementById('modalConfirmacion').style.display = 'none'; 
 }
 
-// ================= FUNCIONES DE SALIDA (EXPUESTAS GLOBALMENTE) =================
+// ================= FUNCIONES GLOBALES =================
 window.confirmarSalida = function() {
     sessionStorage.setItem('fromLogout', 'true');
-    sessionStorage.removeItem('loggedIn');
-    sessionStorage.removeItem('username');
-    sessionStorage.removeItem('loginTime');
+    sessionStorage.clear();
     window.location.replace('login.html');
 };
 
@@ -1458,27 +1485,111 @@ window.cancelarSalida = function() {
     history.pushState(null, null, location.href);
 };
 
-window.continuarSesion = function() {
-    document.getElementById('modalInactividad').style.display = 'none';
-    // El reset del timer se maneja en el HTML
-};
-
-// Cerrar modales al hacer click fuera
-window.onclick = function(e) {
-    const modalConfirm = document.getElementById('modalConfirmacion');
-    const modalSalir = document.getElementById('modalSalir');
-    
-    if (e.target === modalConfirm) {
-        modalConfirm.style.display = 'none';
-    }
-    if (e.target === modalSalir) {
-        modalSalir.style.display = 'none';
-    }
-};
-
 render();
-// Detectar si es móvil
-function esDispositivoMovil() {
-    return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+// ================= MEJORA #11: BOTÓN EDITAR ARTÍCULO =================
+function editarArticulo(index) {
+    if (modoArticuloActivo) {
+        mostrarError('Finalice el artículo en proceso antes de editar');
+        return;
+    }
+    
+    const item = lista[index];
+    
+    // Cargar datos en el formulario
+    document.getElementById('articuloInput').value = item.codigo + ' - ' + item.nombre;
+    document.getElementById('codigoArticuloHidden').value = item.codigo;
+    document.getElementById('nombreArticulo').innerHTML = item.nombre;
+    document.getElementById('prendaInput').value = item.prenda || '';
+    
+    // Crear artículo activo con las cantidades existentes
+    articuloActual = {
+        codigo: item.codigo,
+        nombre: item.nombre,
+        cantidades: [...item.cantidades],
+        prenda: item.prenda || ''
+    };
+    modoArticuloActivo = true;
+    
+    // Eliminar de la lista
+    totalMetros -= parseFloat(item.cantidadTotal);
+    lista.splice(index, 1);
+    
+    actualizarModoArticulo();
+    render();
+    actualizarEstadisticas();
+    
+    document.getElementById('cantidadInput').focus();
+    showToast('Editando artículo. Agregue más cantidades o presione 0 para finalizar', 'info');
 }
+window.editarArticulo = editarArticulo;
+
+// ================= MEJORA #12: VALIDAR NO DUPLICADOS =================
+function validarArticuloDuplicado(codigo) {
+    const duplicado = lista.find(item => item.codigo === codigo);
+    if (duplicado) {
+        mostrarError(`El artículo "${duplicado.nombre}" ya está en la lista. Use EDITAR para modificarlo.`);
+        return true;
+    }
+    if (modoArticuloActivo && articuloActual && articuloActual.codigo === codigo) {
+        mostrarError('Este artículo ya está en proceso de edición');
+        return true;
+    }
+    return false;
+}
+
+// ================= MEJORA #14: GUARDAR HISTORIAL =================
+function guardarEnHistorial() {
+    const historial = JSON.parse(localStorage.getItem('packingHistorial') || '[]');
+    
+    const registro = {
+        fecha: new Date().toISOString(),
+        cliente: document.getElementById('clienteNombre').innerText,
+        vendedor: document.getElementById('vendedorNombre').innerText,
+        total: totalMetros,
+        articulos: lista.length,
+        observaciones: document.getElementById('observacionesGrabar')?.value || '',
+        lista: JSON.parse(JSON.stringify(lista))
+    };
+    
+    historial.unshift(registro);
+    
+    // Mantener solo últimos 50 registros
+    if (historial.length > 50) {
+        historial.pop();
+    }
+    
+    localStorage.setItem('packingHistorial', JSON.stringify(historial));
+    showToast('Lista guardada en historial', 'success');
+}
+
+function verHistorial() {
+    const historial = JSON.parse(localStorage.getItem('packingHistorial') || '[]');
+    
+    if (historial.length === 0) {
+        mostrarError('No hay listas guardadas en el historial');
+        return;
+    }
+    
+    let mensaje = 'ÚLTIMAS LISTAS GUARDADAS:\n\n';
+    historial.slice(0, 5).forEach((reg, i) => {
+        const fecha = new Date(reg.fecha).toLocaleString();
+        mensaje += `${i+1}. ${fecha}\n`;
+        mensaje += `   Cliente: ${reg.cliente}\n`;
+        mensaje += `   Total: ${reg.total} | Artículos: ${reg.articulos}\n\n`;
+    });
+    
+    alert(mensaje);
+}
+window.verHistorial = verHistorial;
+
+// MODIFICAR grabarLista() para incluir historial
+const grabarListaOriginal = grabarLista;
+grabarLista = function() {
+    grabarListaOriginal();
+    // Guardar en historial después de grabar
+    if (lista.length > 0) {
+        guardarEnHistorial();
+    }
+};
 
