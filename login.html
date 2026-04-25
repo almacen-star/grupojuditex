@@ -70,9 +70,13 @@
             margin-bottom: 8px;
         }
 
-        .input-group input {
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper input {
             width: 100%;
-            padding: 14px 16px;
+            padding: 14px 45px 14px 16px;
             border: 2px solid #e5e7eb;
             border-radius: 12px;
             font-size: 14px;
@@ -80,10 +84,46 @@
             font-family: 'Poppins', sans-serif;
         }
 
-        .input-group input:focus {
+        .input-wrapper input:focus {
             outline: none;
             border-color: #1a5c34;
             box-shadow: 0 0 0 3px rgba(26,92,52,0.1);
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 15px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            color: #9ca3af;
+            transition: color 0.3s;
+        }
+
+        .toggle-password:hover {
+            color: #1a5c34;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            margin: 15px 0;
+            text-align: left;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            margin-right: 10px;
+            cursor: pointer;
+            accent-color: #1a5c34;
+        }
+
+        .checkbox-group label {
+            color: #4b5563;
+            font-size: 13px;
+            cursor: pointer;
+            user-select: none;
         }
 
         .btn-login {
@@ -98,11 +138,28 @@
             cursor: pointer;
             transition: all 0.3s;
             margin-top: 10px;
+            position: relative;
+            overflow: hidden;
         }
 
-        .btn-login:hover {
+        .btn-login:hover:not(:disabled) {
             background: #0d3b23;
             transform: translateY(-2px);
+        }
+
+        .btn-login:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .loading-spinner {
+            display: inline-block;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
 
         .login-options {
@@ -170,6 +227,10 @@
             color: #3498db;
         }
 
+        .modal-notify-content i.fa-exclamation-triangle {
+            color: #e74c3c;
+        }
+
         .modal-notify-content h3 {
             font-size: 22px;
             margin-bottom: 12px;
@@ -210,6 +271,18 @@
             font-size: 13px;
             margin-bottom: 20px;
             display: none;
+            border-left: 4px solid #dc2626;
+        }
+
+        .warning-message {
+            background: #fef3c7;
+            color: #d97706;
+            padding: 12px;
+            border-radius: 10px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            display: none;
+            border-left: 4px solid #d97706;
         }
 
         .security-badge {
@@ -220,6 +293,13 @@
 
         .security-badge i {
             margin-right: 5px;
+        }
+
+        .intentos-info {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #6b7280;
         }
 
         /* Modal de confirmacion de salida */
@@ -288,6 +368,17 @@
             filter: brightness(0.9);
         }
 
+        /* Animación de shake para error */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        .shake {
+            animation: shake 0.5s ease-in-out;
+        }
+
         @media (max-width: 480px) {
             .login-card {
                 padding: 30px 20px;
@@ -305,22 +396,42 @@
             </div>
 
             <div id="errorMessage" class="error-message">
-                <i class="fas fa-exclamation-triangle"></i> Usuario o contraseña incorrectos
+                <i class="fas fa-exclamation-triangle"></i> 
+                <span id="errorText">Usuario o contraseña incorrectos</span>
+            </div>
+
+            <div id="warningMessage" class="warning-message">
+                <i class="fas fa-exclamation-circle"></i> 
+                <span id="warningText"></span>
             </div>
 
             <form id="loginForm">
                 <div class="input-group">
                     <label><i class="fas fa-user"></i> USUARIO</label>
-                    <input type="text" id="username" placeholder="Ingrese su usuario" autocomplete="off" required>
+                    <div class="input-wrapper">
+                        <input type="text" id="username" placeholder="Ingrese su usuario" autocomplete="off" required>
+                    </div>
                 </div>
+                
                 <div class="input-group">
                     <label><i class="fas fa-lock"></i> CONTRASEÑA</label>
-                    <input type="password" id="password" placeholder="Ingrese su contraseña" required>
+                    <div class="input-wrapper">
+                        <input type="password" id="password" placeholder="Ingrese su contraseña" required>
+                        <i class="fas fa-eye toggle-password" id="togglePassword"></i>
+                    </div>
                 </div>
-                <button type="submit" class="btn-login">
+
+                <div class="checkbox-group">
+                    <input type="checkbox" id="rememberMe">
+                    <label for="rememberMe">Recordar mi usuario</label>
+                </div>
+
+                <button type="submit" class="btn-login" id="btnLogin">
                     <i class="fas fa-sign-in-alt"></i> INGRESAR
                 </button>
             </form>
+
+            <div id="intentosInfo" class="intentos-info"></div>
 
             <div class="login-options">
                 <button id="btnCrearUsuario">
@@ -349,143 +460,382 @@
         </div>
     </div>
 
-    <script>
-        // ================= PROTECCION: LIMPIAR HISTORIAL AL CARGAR LOGIN =================
-        // Esto evita que se pueda usar el boton "Adelante" despues de cerrar sesion
-        (function() {
-            // Reemplazar el estado actual para que no haya historial hacia adelante
-            if (window.history && window.history.pushState) {
-                // Limpiar cualquier estado futuro
-                history.pushState(null, null, location.href);
-                window.addEventListener('popstate', function() {
-                    // Cuando intenta retroceder, lo mantenemos en login
-                    history.pushState(null, null, location.href);
-                });
-            }
-            
-            // Si hay una sesion previa en otra pestaña, limpiarla al cargar login
-            // (excepto si viene de un logout legitimo que ya limpio)
-            const fromLogout = sessionStorage.getItem('fromLogout');
-            if (fromLogout === 'true') {
-                sessionStorage.removeItem('fromLogout');
-                // Asegurar que no quede sesion
-                sessionStorage.removeItem('loggedIn');
-                sessionStorage.removeItem('username');
-                sessionStorage.removeItem('loginTime');
-            }
-        })();
+    <!-- Modal de bloqueo por intentos -->
+    <div id="modalBlocked" class="modal-notify">
+        <div class="modal-notify-content">
+            <i class="fas fa-lock" style="color: #dc2626;"></i>
+            <h3>Acceso Bloqueado</h3>
+            <p id="blockedMessage">Demasiados intentos fallidos. El acceso ha sido bloqueado temporalmente.</p>
+            <p><strong>Tiempo restante:</strong> <span id="countdownTimer">15:00</span></p>
+            <button id="closeBlockedModalBtn" disabled style="opacity: 0.5;">Esperar</button>
+        </div>
+    </div>
 
-        // ================= USUARIOS VALIDADOS =================
-        const USERS = [
-            { username: "admin", password: "1234" },
-            { username: "juditex", password: "telas2024" },
-            { username: "packing", password: "packing123" }
+<script>
+// ================= LOGIN SCRIPT =================
+
+//----------------------------------
+// PROTECCION HISTORIAL MEJORADA
+//----------------------------------
+(function() {
+    if (window.history && window.history.pushState) {
+        history.pushState(null, null, location.href);
+        window.addEventListener('popstate', function() {
+            history.pushState(null, null, location.href);
+        });
+    }
+    
+    const fromLogout = sessionStorage.getItem('fromLogout');
+    if (fromLogout === "true") {
+        sessionStorage.clear();
+        localStorage.removeItem('rememberedUser');
+    }
+})();
+
+//----------------------------------
+// SISTEMA DE USUARIOS
+//----------------------------------
+function inicializarUsuarios() {
+    if (!localStorage.getItem("usuarios")) {
+        const usuariosDemo = [
+            {
+                usuario: "admin",
+                password: "1234",
+                rol: "admin",
+                estado: "activo",
+                ultimoAcceso: null,
+                intentosFallidos: 0,
+                bloqueadoHasta: null
+            },
+            {
+                usuario: "juditex",
+                password: "telas2024",
+                rol: "usuario",
+                estado: "activo",
+                ultimoAcceso: null,
+                intentosFallidos: 0,
+                bloqueadoHasta: null
+            },
+            {
+                usuario: "packing",
+                password: "packing123",
+                rol: "usuario",
+                estado: "activo",
+                ultimoAcceso: null,
+                intentosFallidos: 0,
+                bloqueadoHasta: null
+            }
         ];
+        localStorage.setItem("usuarios", JSON.stringify(usuariosDemo));
+    }
+}
 
-        // Elementos del DOM
-        const loginForm = document.getElementById('loginForm');
-        const errorMessage = document.getElementById('errorMessage');
-        const usernameInput = document.getElementById('username');
-        const passwordInput = document.getElementById('password');
-        const btnCrearUsuario = document.getElementById('btnCrearUsuario');
-        const btnRecuperar = document.getElementById('btnRecuperar');
-        const modalNotify = document.getElementById('modalNotify');
-        const closeModalBtn = document.getElementById('closeModalBtn');
+inicializarUsuarios();
 
-        // Funcion para mostrar notificacion
-        function showNotification(title, message, icon = 'fa-shield-alt') {
-            document.getElementById('modalIcon').className = `fas ${icon}`;
-            document.getElementById('modalTitle').innerText = title;
-            document.getElementById('modalMessage').innerHTML = message;
-            modalNotify.style.display = 'flex';
+let USERS = JSON.parse(localStorage.getItem("usuarios"));
+
+//----------------------------------
+// CONFIGURACIÓN
+//----------------------------------
+const CONFIG = {
+    MAX_INTENTOS: 3,
+    TIEMPO_BLOQUEO: 15 * 60 * 1000, // 15 minutos
+    LONGITUD_MIN_PASSWORD: 4
+};
+
+//----------------------------------
+// ESTADO DE LA APLICACIÓN
+//----------------------------------
+let intentosFallidos = parseInt(sessionStorage.getItem('intentosFallidos')) || 0;
+let bloqueadoHasta = sessionStorage.getItem('bloqueadoHasta') ? new Date(sessionStorage.getItem('bloqueadoHasta')) : null;
+
+//----------------------------------
+// ELEMENTOS DEL DOM
+//----------------------------------
+const loginForm = document.getElementById('loginForm');
+const errorMessage = document.getElementById('errorMessage');
+const errorText = document.getElementById('errorText');
+const usernameInput = document.getElementById('username');
+const passwordInput = document.getElementById('password');
+const btnLogin = document.getElementById('btnLogin');
+const togglePassword = document.getElementById('togglePassword');
+const rememberMe = document.getElementById('rememberMe');
+
+//----------------------------------
+// FUNCIONES DE UTILIDAD
+//----------------------------------
+function showError(message, autoHide = true) {
+    if (errorText) {
+        errorText.textContent = message;
+    } else {
+        errorMessage.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${message}`;
+    }
+    errorMessage.style.display = 'block';
+    
+    // Agregar animación de shake
+    document.querySelector('.login-card')?.classList.add('shake');
+    setTimeout(() => {
+        document.querySelector('.login-card')?.classList.remove('shake');
+    }, 500);
+    
+    if (autoHide) {
+        setTimeout(() => {
+            errorMessage.style.display = 'none';
+        }, 5000);
+    }
+}
+
+function showLoading(show) {
+    const btn = document.getElementById('btnLogin');
+    if (show) {
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> INGRESANDO...';
+        btn.disabled = true;
+    } else {
+        btn.innerHTML = '<i class="fas fa-sign-in-alt"></i> INGRESAR';
+        btn.disabled = false;
+    }
+}
+
+//----------------------------------
+// VERIFICACIÓN DE BLOQUEO
+//----------------------------------
+function checkIfBlocked() {
+    if (bloqueadoHasta) {
+        const ahora = new Date();
+        if (ahora < bloqueadoHasta) {
+            const tiempoRestante = Math.ceil((bloqueadoHasta - ahora) / 1000 / 60);
+            showError(`Acceso bloqueado. Tiempo restante: ${tiempoRestante} minutos`, false);
+            return true;
+        } else {
+            bloqueadoHasta = null;
+            sessionStorage.removeItem('bloqueadoHasta');
+            intentosFallidos = 0;
+            sessionStorage.setItem('intentosFallidos', '0');
         }
+    }
+    return false;
+}
 
-        // Cerrar modal
-        function closeModal() {
-            modalNotify.style.display = 'none';
+//----------------------------------
+// FUNCIÓN DE LOGIN PRINCIPAL
+//----------------------------------
+function realizarLogin(username, password) {
+    // Verificar bloqueo
+    if (checkIfBlocked()) {
+        return false;
+    }
+    
+    // Validar campos
+    if (!username || !password) {
+        showError('Complete todos los campos');
+        return false;
+    }
+    
+    // Limpiar y normalizar inputs
+    username = username.trim();
+    password = password.trim();
+    
+    // Buscar usuario (comparación exacta)
+    const userFound = USERS.find(user => 
+        user.usuario === username && 
+        user.password === password && 
+        user.estado === "activo"
+    );
+    
+    if (userFound) {
+        // Resetear intentos fallidos
+        intentosFallidos = 0;
+        sessionStorage.setItem('intentosFallidos', '0');
+        
+        // Actualizar último acceso
+        userFound.ultimoAcceso = new Date().toISOString();
+        userFound.intentosFallidos = 0;
+        localStorage.setItem("usuarios", JSON.stringify(USERS));
+        
+        // GUARDAR SESIÓN
+        const loginTime = Date.now();
+        sessionStorage.setItem('loggedIn', 'true');
+        sessionStorage.setItem('username', userFound.usuario);
+        sessionStorage.setItem('rol', userFound.rol);
+        sessionStorage.setItem('loginTime', loginTime.toString());
+        
+        // Recordar usuario
+        if (rememberMe && rememberMe.checked) {
+            localStorage.setItem('rememberedUser', userFound.usuario);
+        } else {
+            localStorage.removeItem('rememberedUser');
         }
+        
+        // Mostrar mensaje de éxito
+        showLoading(true);
+        
+        // REDIRECCIÓN
+        setTimeout(() => {
+            window.location.href = 'packing.html';
+        }, 500);
+        
+        return true;
+        
+    } else {
+        // Manejar intento fallido
+        intentosFallidos++;
+        sessionStorage.setItem('intentosFallidos', intentosFallidos.toString());
+        
+        const restantes = CONFIG.MAX_INTENTOS - intentosFallidos;
+        
+        if (intentosFallidos >= CONFIG.MAX_INTENTOS) {
+            bloqueadoHasta = new Date(Date.now() + CONFIG.TIEMPO_BLOQUEO);
+            sessionStorage.setItem('bloqueadoHasta', bloqueadoHasta.toISOString());
+            showError(`Demasiados intentos fallidos. Acceso bloqueado por 15 minutos.`, false);
+        } else {
+            showError(`Usuario o contraseña incorrectos. Intentos restantes: ${restantes}`);
+        }
+        
+        passwordInput.value = '';
+        passwordInput.focus();
+        return false;
+    }
+}
 
-        closeModalBtn.addEventListener('click', closeModal);
-        modalNotify.addEventListener('click', function(e) {
-            if (e.target === modalNotify) closeModal();
-        });
+//----------------------------------
+// EVENT LISTENERS
+//----------------------------------
+if (loginForm) {
+    loginForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const username = usernameInput.value;
+        const password = passwordInput.value;
+        realizarLogin(username, password);
+    });
+}
 
-        // Crear Usuario - notificacion
-        btnCrearUsuario.addEventListener('click', function() {
-            showNotification(
-                'Contacte con Administrador',
-                'La creacion de nuevos usuarios solo puede ser realizada por el administrador del sistema. Por favor contacte con soporte.',
-                'fa-user-shield'
-            );
-        });
+// Toggle password visibility
+if (togglePassword) {
+    togglePassword.addEventListener('click', function() {
+        const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+        passwordInput.setAttribute('type', type);
+        this.classList.toggle('fa-eye');
+        this.classList.toggle('fa-eye-slash');
+    });
+}
 
-        // Recuperar Contraseña - notificacion
-        btnRecuperar.addEventListener('click', function() {
-            showNotification(
-                'Recuperar Contraseña',
-                'Si olvido su contraseña, por favor contacte con soporte tecnico para restablecer su acceso.',
-                'fa-envelope'
-            );
-        });
+// Cargar usuario recordado
+window.addEventListener('load', function() {
+    const rememberedUser = localStorage.getItem('rememberedUser');
+    if (rememberedUser && usernameInput) {
+        usernameInput.value = rememberedUser;
+        if (rememberMe) rememberMe.checked = true;
+        if (passwordInput) passwordInput.focus();
+    } else if (usernameInput) {
+        usernameInput.focus();
+    }
+    
+    // Verificar si hay bloqueo activo
+    if (checkIfBlocked()) {
+        if (usernameInput) usernameInput.disabled = true;
+        if (passwordInput) passwordInput.disabled = true;
+        if (btnLogin) btnLogin.disabled = true;
+    }
+    
+    // Limpiar campos de contraseña por seguridad
+    if (passwordInput) passwordInput.value = '';
+});
 
-        // Validar login
-        loginForm.addEventListener('submit', function(e) {
+// Atajos de teclado
+if (usernameInput) {
+    usernameInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
             e.preventDefault();
-            
-            const username = usernameInput.value.trim();
-            const password = passwordInput.value.trim();
+            if (passwordInput) passwordInput.focus();
+        }
+    });
+}
 
-            // Validar que no esten vacios
-            if (!username || !password) {
-                errorMessage.style.display = 'block';
-                errorMessage.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Complete todos los campos';
-                setTimeout(() => {
-                    errorMessage.style.display = 'none';
-                }, 3000);
-                return;
-            }
+if (passwordInput) {
+    passwordInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            if (loginForm) loginForm.dispatchEvent(new Event('submit'));
+        }
+    });
+}
 
-            // Buscar usuario en la lista
-            const userFound = USERS.find(user => 
-                user.username === username && user.password === password
-            );
+// Limpiar mensajes al escribir
+if (usernameInput) {
+    usernameInput.addEventListener('input', function() {
+        if (errorMessage) errorMessage.style.display = 'none';
+    });
+}
 
-            if (userFound) {
-                // LOGIN EXITOSO - Guardar sesion y redirigir
-                sessionStorage.setItem('loggedIn', 'true');
-                sessionStorage.setItem('username', username);
-                sessionStorage.setItem('loginTime', new Date().getTime());
-                
-                // Redirigir a packing.html (reemplazando el historial para no poder volver)
-                window.location.replace('packing.html');
-            } else {
-                // LOGIN FALLIDO
-                errorMessage.style.display = 'block';
-                errorMessage.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Usuario o contraseña incorrectos';
-                usernameInput.value = '';
-                passwordInput.value = '';
-                usernameInput.focus();
-                
-                setTimeout(() => {
-                    errorMessage.style.display = 'none';
-                }, 3000);
-            }
-        });
+if (passwordInput) {
+    passwordInput.addEventListener('input', function() {
+        if (errorMessage) errorMessage.style.display = 'none';
+    });
+}
 
-        // Prevenir acceso directo con tecla Enter en inputs
-        usernameInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                passwordInput.focus();
-            }
-        });
+//----------------------------------
+// BOTONES ADICIONALES
+//----------------------------------
+const btnCrearUsuario = document.getElementById('btnCrearUsuario');
+const btnRecuperar = document.getElementById('btnRecuperar');
+const modalNotify = document.getElementById('modalNotify');
+const closeModalBtn = document.getElementById('closeModalBtn');
 
-        passwordInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                e.preventDefault();
-                loginForm.dispatchEvent(new Event('submit'));
-            }
-        });
-    </script>
+function showNotification(title, message, icon = 'fa-shield-alt') {
+    const modalIcon = document.getElementById('modalIcon');
+    const modalTitle = document.getElementById('modalTitle');
+    const modalMessage = document.getElementById('modalMessage');
+    
+    if (modalIcon) modalIcon.className = `fas ${icon}`;
+    if (modalTitle) modalTitle.innerText = title;
+    if (modalMessage) modalMessage.innerHTML = message;
+    if (modalNotify) modalNotify.style.display = 'flex';
+}
+
+function closeModal() {
+    if (modalNotify) modalNotify.style.display = 'none';
+}
+
+if (btnCrearUsuario) {
+    btnCrearUsuario.addEventListener('click', function() {
+        showNotification(
+            'Crear Nuevo Usuario',
+            'Para crear un nuevo usuario, contacte al administrador del sistema.<br><br>' +
+            '<strong>📧 Email:</strong> administracion@grupojuditex.com<br>' +
+            '<strong>📱 WhatsApp:</strong> +51 970 855 278',
+            'fa-user-plus'
+        );
+    });
+}
+
+if (btnRecuperar) {
+    btnRecuperar.addEventListener('click', function() {
+        const username = usernameInput ? usernameInput.value.trim() : '';
+        let mensaje = 'Para recuperar su contraseña, contacte con soporte técnico.';
+        
+        if (username) {
+            mensaje = `Para recuperar la contraseña del usuario "${username}", contacte a soporte.`;
+        }
+        
+        showNotification(
+            'Recuperar Contraseña',
+            mensaje + '<br><br>' +
+            '<strong>📧 Soporte:</strong> soporte@grupojuditex.com<br>' +
+            '<strong>📱 WhatsApp:</strong> +51 970 855 278',
+            'fa-key'
+        );
+    });
+}
+
+if (closeModalBtn) {
+    closeModalBtn.addEventListener('click', closeModal);
+}
+
+if (modalNotify) {
+    modalNotify.addEventListener('click', function(e) {
+        if (e.target === modalNotify) closeModal();
+    });
+}
+</script>
 </body>
 </html>
