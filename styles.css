@@ -1103,7 +1103,7 @@ tbody tr:last-child td { border-bottom: none; }
 }
 
 .corte-texto {
-    font-size: 7px;
+    font-size: 15px;
     color: #999;
     letter-spacing: 1px;
     border: none;
