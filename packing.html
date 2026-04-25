@@ -3,265 +3,339 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1a5c34">
     <title>Packing List | Grupo Juditex</title>
     
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
 <body>
-
-<script>
-    // VERIFICACION DE SEGURIDAD - Redirigir a login si no hay sesion activa
-    (function() {
-        const loggedIn = sessionStorage.getItem('loggedIn');
-        const loginTime = sessionStorage.getItem('loginTime');
-        
-        if (!loggedIn || !loginTime || (new Date().getTime() - parseInt(loginTime)) > 28800000) {
-            sessionStorage.removeItem('loggedIn');
-            sessionStorage.removeItem('username');
-            sessionStorage.removeItem('loginTime');
-            window.location.href = 'login.html';
-        }
-    })();
-</script>
-
-<script>
-    // ================= PROTECCION DE RETROCESO Y SALIDA =================
-    (function() {
-        // Prevenir que el usuario use el boton "Atras" del navegador
-        history.pushState(null, null, location.href);
-        window.addEventListener('popstate', function() {
-            mostrarModalSalir();
-        });
-        
-        // Variable para controlar si se debe mostrar confirmacion al salir
-        let puedeSalir = false;
-        
-        window.mostrarModalSalir = function() {
-            document.getElementById('modalSalir').style.display = 'flex';
-        };
-        
-        window.confirmarSalida = function() {
-            puedeSalir = true;
-            sessionStorage.setItem('fromLogout', 'true');
-            sessionStorage.removeItem('loggedIn');
-            sessionStorage.removeItem('username');
-            sessionStorage.removeItem('loginTime');
-            window.location.replace('login.html');
-        };
-        
-        window.cancelarSalida = function() {
-            document.getElementById('modalSalir').style.display = 'none';
-            history.pushState(null, null, location.href);
-        };
-        
-        // Detectar cuando el usuario intenta cerrar la pestaña o navegar fuera
-        window.addEventListener('beforeunload', function(e) {
-            if (!puedeSalir && sessionStorage.getItem('loggedIn') === 'true') {
-                e.preventDefault();
-                e.returnValue = '';
-                return '';
+    <!-- VERIFICACIÓN DE SEGURIDAD -->
+    <script>
+        (function() {
+            const loggedIn = sessionStorage.getItem('loggedIn');
+            const loginTime = sessionStorage.getItem('loginTime');
+            
+            if (!loggedIn || loggedIn !== 'true') {
+                window.location.href = 'login.html';
+                return;
             }
-        });
-        
-        // ================= DETECCION DE INACTIVIDAD =================
-        let tiempoInactividad;
-        const TIEMPO_INACTIVIDAD = 300000; // 5 minutos (300000 ms)
-        let modalInactividadMostrado = false;
-        let countdownInterval;
-        let segundosRestantes = 30;
-        
-        function resetearTiempoInactividad() {
-            clearTimeout(tiempoInactividad);
-            clearInterval(countdownInterval);
-            if (modalInactividadMostrado) {
-                document.getElementById('modalInactividad').style.display = 'none';
-                modalInactividadMostrado = false;
-            }
-            segundosRestantes = 30;
             
-            tiempoInactividad = setTimeout(function() {
-                mostrarModalInactividad();
-            }, TIEMPO_INACTIVIDAD);
-        }
-        
-        function mostrarModalInactividad() {
-            if (sessionStorage.getItem('loggedIn') !== 'true') return;
-            
-            document.getElementById('modalInactividad').style.display = 'flex';
-            modalInactividadMostrado = true;
-            document.getElementById('inactividadCountdown').textContent = segundosRestantes;
-            
-            countdownInterval = setInterval(function() {
-                segundosRestantes--;
-                document.getElementById('inactividadCountdown').textContent = segundosRestantes;
+            if (loginTime) {
+                const tiempoTranscurrido = Date.now() - parseInt(loginTime);
+                const tiempoMaximo = 8 * 60 * 60 * 1000;
                 
-                if (segundosRestantes <= 0) {
-                    clearInterval(countdownInterval);
-                    sessionStorage.setItem('fromLogout', 'true');
-                    sessionStorage.removeItem('loggedIn');
-                    sessionStorage.removeItem('username');
-                    sessionStorage.removeItem('loginTime');
-                    window.location.replace('login.html');
+                if (tiempoTranscurrido > tiempoMaximo) {
+                    sessionStorage.clear();
+                    window.location.href = 'login.html';
+                    return;
                 }
-            }, 1000);
-        }
-        
-        window.continuarSesion = function() {
-            clearInterval(countdownInterval);
-            document.getElementById('modalInactividad').style.display = 'none';
-            modalInactividadMostrado = false;
-            segundosRestantes = 30;
-            resetearTiempoInactividad();
-        };
-        
-        // Eventos que resetean el temporizador de inactividad
-        ['mousedown', 'mousemove', 'keydown', 'scroll', 'touchstart', 'click', 'keypress'].forEach(function(evento) {
-            document.addEventListener(evento, resetearTiempoInactividad);
-        });
-        
-        resetearTiempoInactividad();
-    })();
-</script>
+            }
+        })();
+    </script>
 
-<main id="formulario" class="form-container">
-    <div class="card">
-        <header class="form-header">
-            <h1>PACKING LIST JUDITEX</h1>
+    <!-- PROTECCIÓN DE RETROCESO Y SALIDA -->
+    <script>
+        (function() {
+            history.pushState(null, null, location.href);
+            window.addEventListener('popstate', function() {
+                mostrarModalSalir();
+            });
             
-            <div class="instrucciones">
-                <div class="instruccion-titulo">INSTRUCCIONES DE USO</div>
-                <div class="instruccion-lista">
-                    <div>1. Seleccione o busque un CLIENTE</div>
-                    <div>2. Seleccione un VENDEDOR</div>
-                    <div>3. Busque o seleccione un ARTICULO</div>
-                    <div>4. Opcional: escriba una PRENDA</div>
-                    <div>5. Ingrese CANTIDAD (metros) y presione ENTER</div>
-                    <div>6. Para finalizar un articulo, presione 0 en cantidad</div>
-                    <div>7. Maximo 6 articulos por packing list</div>
+            let puedeSalir = false;
+            
+            window.mostrarModalSalir = function() {
+                document.getElementById('modalSalir').style.display = 'flex';
+            };
+            
+            window.confirmarSalida = function() {
+                puedeSalir = true;
+                sessionStorage.setItem('fromLogout', 'true');
+                sessionStorage.clear();
+                window.location.replace('login.html');
+            };
+            
+            window.cancelarSalida = function() {
+                document.getElementById('modalSalir').style.display = 'none';
+                history.pushState(null, null, location.href);
+            };
+            
+            window.addEventListener('beforeunload', function(e) {
+                if (!puedeSalir && sessionStorage.getItem('loggedIn') === 'true') {
+                    e.preventDefault();
+                    e.returnValue = '';
+                    return '';
+                }
+            });
+        })();
+    </script>
+
+    <!-- HEADER CON INFO DE USUARIO -->
+    <header class="app-header">
+        <div class="header-left">
+            <div class="logo-mini">
+                <i class="fas fa-tshirt"></i>
+                <span>JUDITEX</span>
+            </div>
+        </div>
+        
+        <div class="header-right">
+            <div class="user-info">
+                <i class="fas fa-user-circle"></i>
+                <div class="user-details">
+                    <span id="loggedUser" class="user-name">Cargando...</span>
+                    <span id="userRole" class="user-role"></span>
                 </div>
             </div>
-        </header>
-        
-        <div class="form-grid">
-            <!-- CLIENTE - BUSCADOR -->
-            <div class="input-group">
-                <label for="clienteInput">CLIENTE</label>
-                <input type="text" id="clienteInput" placeholder="Escriba para buscar cliente..." autocomplete="off" style="text-transform: uppercase;">
-                <div id="clienteSugerencias" class="sugerencias"></div>
+            
+            <div class="session-timer">
+                <i class="fas fa-hourglass-half"></i>
+                <span id="sessionTimer">08:00</span>
             </div>
             
-            <!-- VENDEDOR - SELECT -->
-            <div class="input-group">
-                <label for="vendedorSelect">VENDEDOR</label>
-                <select id="vendedorSelect">
-                    <option value="">-- SELECCIONAR VENDEDOR --</option>
-                    <option value="JESUS JUSTO">JESUS JUSTO</option>
-                    <option value="MIRELLA LANCHE">MIRELLA LANCHE</option>
-                    <option value="JORGE MATOS">JORGE MATOS</option>
-                    <option value="VICTOR MANUEL">VICTOR MANUEL</option>
-                </select>
-            </div>
-            
-            <!-- ARTICULO - BUSCADOR -->
-            <div class="input-group">
-                <label for="articuloInput">ARTICULO</label>
-                <input type="text" id="articuloInput" placeholder="Escriba para buscar articulo..." autocomplete="off" style="text-transform: uppercase;">
-                <div id="articuloSugerencias" class="sugerencias"></div>
-                <input type="hidden" id="codigoArticuloHidden" value="">
-                <input type="hidden" id="empresaArticuloHidden" value="">
-            </div>
-            
-            <!-- PRENDA - CAMPO TEXTO LIBRE -->
-            <div class="input-group">
-                <label for="prendaInput">PRENDA (opcional)</label>
-                <input type="text" id="prendaInput" placeholder="Ej: PANTALON, CAMISA, CHAQUETA" autocomplete="off" style="text-transform: uppercase;">
-            </div>
-            
-            <div class="input-group">
-                <label for="cantidadInput">CANTIDAD (metros)</label>
-                <input type="number" id="cantidadInput" step="0.01" min="0.01" placeholder="0.00" max="999">
-                <div class="input-ayuda">Presione 0 para finalizar el articulo actual</div>
-            </div>
+            <button class="help-button" id="helpButton" title="Ayuda">
+                <i class="fas fa-question-circle"></i>
+            </button>
         </div>
-        
-        <div class="info-panel">
-            <div id="nombreArticulo" class="articulo-preview">
-                Ingrese o seleccione un articulo
-            </div>
-        </div>
-        
-        <div class="table-wrapper">
-            <table id="tabla" class="tabla-articulos">
-                <thead>
-                    <tr>
-                        <th>ARTICULO</th>
-                        <th>METROS</th>
-                        <th>PRENDA</th>
-                        <th>SUBTOTAL</th>
-                        <th>ACCION</th>
-                    </tr>
-                </thead>
-                <tbody id="tablaBody"></tbody>
-            </table>
-            <div id="tablaVacia" class="tabla-vacia">
-                No hay articulos agregados
-            </div>
-        </div>
-        
-        <div class="totales-grid">
-            <div class="total-card">
-                <span class="label">TOTAL METROS:</span>
-                <span id="total" class="valor">0.00</span>
-            </div>
-            <div class="total-card">
-                <span class="label">ARTICULOS:</span>
-                <span id="cantidad" class="valor">0</span>
-                <span class="limite">/6</span>
-            </div>
-            <div class="total-card">
-                <span class="label">CLIENTE:</span>
-                <span id="clienteNombre" class="valor">—</span>
-            </div>
-            <div class="total-card">
-                <span class="label">VENDEDOR:</span>
-                <span id="vendedorNombre" class="valor">—</span>
-            </div>
-        </div>
-        
-        <div class="progress-container">
-            <div id="progressBar" class="progress-bar" style="width: 0%"></div>
-        </div>
-        
-        <div class="button-group">
-            <button type="button" class="btn btn-primary" id="btnAgregar">AGREGAR (ENTER)</button>
-            <button type="button" class="btn btn-secondary" id="btnLimpiar">NUEVA LISTA</button>
-            <button type="button" class="btn btn-success" id="btnGrabar" style="background: #1a5c34;">GRABAR</button>
-            <button type="button" class="btn btn-danger" id="btnSalir" style="background: #dc2626;">SALIR</button>
-        </div>
-    </div>
-</main>
+    </header>
 
-<!-- AREA DE IMPRESION -->
+    <!-- CONTENEDOR PRINCIPAL -->
+    <main id="formulario" class="form-container">
+        <div class="card">
+            <header class="form-header">
+                <h1>PACKING LIST JUDITEX</h1>
+                
+                <details class="instrucciones-collapsible">
+                    <summary>📋 INSTRUCCIONES DE USO</summary>
+                    <div class="instrucciones-content">
+                        <div class="instruccion-lista">
+                            <div>1. Seleccione o busque un CLIENTE</div>
+                            <div>2. Seleccione un VENDEDOR</div>
+                            <div>3. Busque o seleccione un ARTÍCULO</div>
+                            <div>4. Opcional: escriba una PRENDA</div>
+                            <div>5. Ingrese CANTIDAD (metros) y presione ENTER</div>
+                            <div>6. Para finalizar un artículo, presione 0 en cantidad</div>
+                            <div>7. Máximo 6 artículos por packing list</div>
+                        </div>
+                        <div class="atajos-teclado">
+                            <h4>⌨️ ATAJOS DE TECLADO</h4>
+                            <div class="atajo-item"><kbd>Enter</kbd> <span>Agregar artículo</span></div>
+                            <div class="atajo-item"><kbd>Ctrl</kbd> + <kbd>L</kbd> <span>Limpiar lista</span></div>
+                            <div class="atajo-item"><kbd>Ctrl</kbd> + <kbd>G</kbd> <span>Grabar lista</span></div>
+                            <div class="atajo-item"><kbd>Ctrl</kbd> + <kbd>P</kbd> <span>Imprimir</span></div>
+                            <div class="atajo-item"><kbd>Esc</kbd> <span>Cancelar/Salir</span></div>
+                        </div>
+                    </div>
+                </details>
+            </header>
+            
+            <div class="progress-steps">
+                <div class="step active" data-step="1">
+                    <span class="step-number">1</span>
+                    <span class="step-label">Cliente</span>
+                </div>
+                <div class="step" data-step="2">
+                    <span class="step-number">2</span>
+                    <span class="step-label">Vendedor</span>
+                </div>
+                <div class="step" data-step="3">
+                    <span class="step-number">3</span>
+                    <span class="step-label">Artículo</span>
+                </div>
+                <div class="step" data-step="4">
+                    <span class="step-number">4</span>
+                    <span class="step-label">Cantidad</span>
+                </div>
+            </div>
+            
+            <div class="form-grid">
+                <div class="input-group">
+                    <label for="clienteInput">
+                        <i class="fas fa-user-tie"></i>
+                        <span>CLIENTE</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <input type="text" id="clienteInput" placeholder="Escriba para buscar cliente..." autocomplete="off" style="text-transform: uppercase;">
+                        <button class="clear-input" type="button" title="Limpiar">&times;</button>
+                    </div>
+                    <div id="clienteSugerencias" class="sugerencias"></div>
+                    <small class="input-help">Seleccione de la lista o escriba para buscar</small>
+                </div>
+                
+                <div class="input-group">
+                    <label for="vendedorSelect">
+                        <i class="fas fa-user"></i>
+                        <span>VENDEDOR</span>
+                    </label>
+                    <select id="vendedorSelect">
+                        <option value="">-- SELECCIONAR VENDEDOR --</option>
+                        <option value="JESUS JUSTO">JESUS JUSTO</option>
+                        <option value="MIRELLA LANCHE">MIRELLA LANCHE</option>
+                        <option value="JORGE MATOS">JORGE MATOS</option>
+                        <option value="VICTOR MANUEL">VICTOR MANUEL</option>
+                    </select>
+                </div>
+                
+                <div class="input-group">
+                    <label for="articuloInput">
+                        <i class="fas fa-box"></i>
+                        <span>ARTÍCULO</span>
+                    </label>
+                    <div class="input-wrapper">
+                        <input type="text" id="articuloInput" placeholder="Escriba para buscar artículo..." autocomplete="off" style="text-transform: uppercase;">
+                        <button class="clear-input" type="button" title="Limpiar">&times;</button>
+                    </div>
+                    <div id="articuloSugerencias" class="sugerencias"></div>
+                    <input type="hidden" id="codigoArticuloHidden" value="">
+                </div>
+                
+                <div class="input-group">
+                    <label for="prendaInput">
+                        <i class="fas fa-tshirt"></i>
+                        <span>PRENDA</span>
+                        <span class="optional-badge">(opcional)</span>
+                    </label>
+                    <input type="text" id="prendaInput" placeholder="Ej: PANTALÓN, CAMISA, CHAQUETA" autocomplete="off" style="text-transform: uppercase;">
+                </div>
+                
+                <div class="input-group">
+                    <label for="cantidadInput">
+                        <i class="fas fa-ruler"></i>
+                        <span>CANTIDAD (metros)</span>
+                    </label>
+                    <input type="number" id="cantidadInput" step="0.01" min="0.01" max="999" placeholder="0.00">
+                    <div class="input-ayuda">Presione 0 para finalizar el artículo actual</div>
+                </div>
+            </div>
+            
+            <div class="stats-panel">
+                <div class="stat-item">
+                    <i class="fas fa-weight-hanging"></i>
+                    <span class="stat-label">PESO ESTIMADO:</span>
+                    <span id="pesoEstimado" class="stat-value">0.00 kg</span>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-box"></i>
+                    <span class="stat-label">ROLLOS ESTIMADOS:</span>
+                    <span id="rollosEstimados" class="stat-value">0</span>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-chart-line"></i>
+                    <span class="stat-label">PROMEDIO/ARTÍCULO:</span>
+                    <span id="promedioArticulo" class="stat-value">0.00 m</span>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-ruler-combined"></i>
+                    <span class="stat-label">METROS TOTALES:</span>
+                    <span id="metrosTotalesStats" class="stat-value">0.00 m</span>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-tshirt"></i>
+                    <span class="stat-label">PRENDAS:</span>
+                    <span id="prendasTotales" class="stat-value">0</span>
+                </div>
+                <div class="stat-item">
+                    <i class="fas fa-calculator"></i>
+                    <span class="stat-label">CANTIDADES:</span>
+                    <span id="cantidadesTotales" class="stat-value">0</span>
+                </div>
+            </div>
+            
+            <div class="info-panel">
+                <div id="nombreArticulo" class="articulo-preview">Ingrese o seleccione un artículo</div>
+            </div>
+            
+            <div class="table-actions">
+                <button class="btn-icon" id="duplicarUltimo" title="Duplicar último artículo">
+                    <i class="fas fa-copy"></i>
+                    <span>Duplicar último</span>
+                </button>
+                <button class="btn-icon" id="exportarExcel" title="Exportar a Excel">
+                    <i class="fas fa-file-excel"></i>
+                    <span>Excel</span>
+                </button>
+            </div>
+            
+            <div class="table-wrapper">
+                <table id="tabla" class="tabla-articulos">
+                    <thead>
+                        <tr>
+                            <th>ARTÍCULO</th>
+                            <th>METROS</th>
+                            <th>PRENDA</th>
+                            <th>ACCIÓN</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tablaBody"></tbody>
+                </table>
+                <div id="tablaVacia" class="tabla-vacia">No hay artículos agregados</div>
+            </div>
+            
+            <div class="totales-grid">
+                <div class="total-card">
+                    <span class="label">TOTAL METROS:</span>
+                    <span id="total" class="valor">0.00</span>
+                </div>
+                <div class="total-card">
+                    <span class="label">ARTÍCULOS:</span>
+                    <span id="cantidad" class="valor">0</span>
+                    <span class="limite">/6</span>
+                </div>
+                <div class="total-card">
+                    <span class="label">CLIENTE:</span>
+                    <span id="clienteNombre" class="valor">—</span>
+                </div>
+                <div class="total-card">
+                    <span class="label">VENDEDOR:</span>
+                    <span id="vendedorNombre" class="valor">—</span>
+                </div>
+            </div>
+            
+            <div class="progress-container">
+                <div id="progressBar" class="progress-bar" style="width: 0%"></div>
+            </div>
+            
+            <div class="button-group">
+                <button type="button" class="btn btn-primary" id="btnAgregar">
+                    <i class="fas fa-plus-circle"></i>
+                    <span>AGREGAR (ENTER)</span>
+                </button>
+                <button type="button" class="btn btn-secondary" id="btnLimpiar">
+                    <i class="fas fa-trash-alt"></i>
+                    <span>NUEVA LISTA</span>
+                </button>
+                <button type="button" class="btn btn-success" id="btnGrabar">
+                    <i class="fas fa-save"></i>
+                    <span>GRABAR</span>
+                </button>
+                <button type="button" class="btn btn-danger" id="btnSalir">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>SALIR</span>
+                </button>
+            </div>
+        </div>
+    </main>
+
 <div id="printArea">
+    <!-- BLOQUE SUPERIOR -->
     <div class="bloque bloque-superior">
         <div class="header-packing">
             <div class="titulo-packing">PACKING LIST</div>
         </div>
+        
         <div class="contenido-principal">
             <div class="izquierda-tabla">
                 <div id="p_lista" class="tabla-packing"></div>
             </div>
             <div class="derecha-vacio">
-                <div id="empresaContainer" class="empresa-container" style="display: none;">
-                    <span id="empresaValor" class="empresa-valor"></span>
-                </div>
                 <div class="cargo-container">
-                    <img src="CARGO.png" alt="CARGO" id="logoImagen" class="logo-print">
+                    <img src="CARGO.png" alt="CARGO" id="logoImagen" style="max-width:280px;width:100%;height:auto;">
                 </div>
             </div>
         </div>
+        
+        <!-- FOOTER FIJO PARTE SUPERIOR -->
         <div class="footer-superior">
             <div class="total-izquierda"><strong>TOTAL:</strong> <span id="p_total">0.00</span></div>
             <div class="info-central"><div class="cliente-line"><strong>CLIENTE:</strong> <span id="p_cliente">—</span></div></div>
@@ -270,21 +344,27 @@
                 <div class="rollos-line"><strong>CANT.:</strong> <span id="p_rollos">0</span></div>
             </div>
         </div>
-        <div class="aviso">
-            <strong>AVISO IMPORTANTE:</strong><br>
-            1. El cliente debera foliar o numerar las capas tendidas de tela.<br>
-            2. NO CORTE el rollo antes de comprobar calidad y metraje.<br>
-            <strong>ABSTENERSE DE RECLAMOS. GRACIAS.</strong>
-        </div>
-        <div class="fecha-impresion">Fecha: <span id="fechaActual1"></span></div>
+        
+        <!-- AVISO FIJO EN MITAD DE HOJA -->
+        <div class="aviso-mitad">
+    <strong>⚠️ AVISO IMPORTANTE:</strong><br>
+    1. El cliente deberá foliar o numerar las capas tendidas de tela.<br>
+    2. NO CORTE el rollo antes de comprobar calidad y metraje.<br>
+    <strong>ABSTENERSE DE RECLAMOS. GRACIAS.</strong>
+</div>
     </div>
     
-    <div class="corte"><span>- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</span><small>CORTAR</small></div>
+    <!-- LÍNEA DE CORTE FIJA -->
+    <div class="corte">
+        <div class="corte-texto">- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -</div>
+    </div>
     
+    <!-- BLOQUE INFERIOR -->
     <div class="bloque bloque-inferior">
-        <div class="header-packing header-sin-cargo">
+        <div class="header-packing">
             <div class="titulo-packing">PACKING LIST</div>
         </div>
+        
         <div class="contenido-principal">
             <div class="izquierda-tabla">
                 <div id="p_lista2" class="tabla-packing"></div>
@@ -293,7 +373,9 @@
                 <div class="vacio-placeholder"></div>
             </div>
         </div>
-        <div class="footer-superior">
+        
+        <!-- FOOTER FIJO PARTE INFERIOR -->
+        <div class="footer-inferior">
             <div class="total-izquierda"><strong>TOTAL:</strong> <span id="p_total2">0.00</span></div>
             <div class="info-central"><div class="cliente-line"><strong>CLIENTE:</strong> <span id="p_cliente2">—</span></div></div>
             <div class="info-derecha">
@@ -301,98 +383,152 @@
                 <div class="rollos-line"><strong>CANT.:</strong> <span id="p_rollos2">0</span></div>
             </div>
         </div>
-        <div class="aviso aviso-cliente">
-            <strong>AVISO IMPORTANTE:</strong><br>
-            1. Foliar o numerar las capas tendidas.<br>
-            2. NO CORTE sin comprobar calidad.<br>
-            <strong>ABSTENERSE DE RECLAMOS.</strong>
-        </div>
-        <div class="fecha-impresion">Fecha: <span id="fechaActual2"></span></div>
-    </div>
-</div>
-
-<!-- Modal de Confirmacion para Limpiar -->
-<div id="modalConfirmacion" class="modal-confirm" style="display: none;">
-    <div class="modal-confirm-content">
-        <h3>Limpiar lista</h3>
-        <p>Se perderan todos los articulos agregados.</p>
-        <div class="modal-buttons">
-            <button class="btn btn-secondary" id="cancelarLimpiar">Cancelar</button>
-            <button class="btn btn-danger" id="confirmarLimpiar">Limpiar</button>
-        </div>
-    </div>
-</div>
-
-<!-- Modal de Grabacion / Resumen -->
-<div id="modalGrabar" class="modal-grabar" style="display: none;">
-    <div class="modal-grabar-content">
-        <div class="modal-grabar-header">
-            <h2>LISTA GRABADA</h2>
-            <p>Revise los datos antes de continuar</p>
-        </div>
         
-        <div class="resumen-packing">
-            <div class="resumen-header">
-                <div class="resumen-item">
-                    <span class="resumen-label">CLIENTE</span>
-                    <span id="resumenCliente" class="resumen-valor">—</span>
+        <!-- AVISO FIJO EN BORDE INFERIOR -->
+        <div class="aviso-final">
+    <strong>⚠️ AVISO IMPORTANTE:</strong><br>
+    1. Foliar o numerar las capas tendidas.<br>
+    2. NO CORTE sin comprobar calidad.<br>
+    <strong>ABSTENERSE DE RECLAMOS.</strong>
+</div>
+    </div>
+</div>
+
+    <!-- MODALES -->
+    <div id="modalError" class="modal-error" style="display: none;">
+        <div class="modal-error-content">
+            <h3>ERROR</h3>
+            <p id="errorMensaje"></p>
+            <p style="font-size: 12px; color: #6b7280;">
+                <i class="fas fa-envelope"></i> 
+                <a href="mailto:soporte@grupojuditex.com">soporte@grupojuditex.com</a>
+            </p>
+            <button id="cerrarErrorBtn" class="btn btn-primary">Cerrar</button>
+        </div>
+    </div>
+
+    <div id="modalConfirmacion" class="modal-confirm" style="display: none;">
+        <div class="modal-confirm-content">
+            <h3>Limpiar lista</h3>
+            <p>Se perderán todos los artículos agregados.</p>
+            <div class="modal-buttons">
+                <button class="btn btn-secondary" id="cancelarLimpiar">Cancelar</button>
+                <button class="btn btn-danger" id="confirmarLimpiar">Limpiar</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalGrabar" class="modal-grabar" style="display: none;">
+        <div class="modal-grabar-content">
+            <div class="modal-grabar-header">
+                <h2>LISTA GRABADA</h2>
+                <p>Revise los datos antes de continuar</p>
+            </div>
+            
+            <div class="resumen-packing">
+                <div class="resumen-header">
+                    <div class="resumen-item">
+                        <span class="resumen-label">CLIENTE</span>
+                        <span id="resumenCliente" class="resumen-valor">—</span>
+                    </div>
+                    <div class="resumen-item">
+                        <span class="resumen-label">VENDEDOR</span>
+                        <span id="resumenVendedor" class="resumen-valor">—</span>
+                    </div>
                 </div>
-                <div class="resumen-item">
-                    <span class="resumen-label">VENDEDOR</span>
-                    <span id="resumenVendedor" class="resumen-valor">—</span>
+                
+                <div class="resumen-tabla">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>ARTÍCULO</th>
+                                <th>PRENDA</th>
+                                <th>CANTIDADES</th>
+                                <th>TOTAL</th>
+                            </tr>
+                        </thead>
+                        <tbody id="resumenTablaBody"></tbody>
+                    </table>
+                </div>
+                
+                <div class="observaciones-section">
+                    <label for="observacionesGrabar">Observaciones:</label>
+                    <textarea id="observacionesGrabar" rows="2" placeholder="Notas adicionales..."></textarea>
+                </div>
+                
+                <div class="resumen-footer">
+                    <span>TOTAL GENERAL</span>
+                    <span id="resumenTotal">0.00</span>
                 </div>
             </div>
             
-            <div class="resumen-tabla">
-                <table>
-                    <thead>
-                        <tr>
-                            <th>ARTICULO</th>
-                            <th>PRENDA</th>
-                            <th>CANTIDADES</th>
-                            <th>TOTAL</th>
-                        </tr>
-                    </thead>
-                    <tbody id="resumenTablaBody"></tbody>
+            <div class="modal-grabar-buttons">
+                <button class="btn btn-editar" id="btnVolverEditar">VOLVER A EDITAR</button>
+                <button class="btn btn-pdf-grabar" id="btnGenerarPDF">GENERAR PDF</button>
+                <button class="btn btn-imprimir-grabar" id="btnImprimirGrabar">IMPRIMIR</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalSalir" class="modal-salir" style="display: none;">
+        <div class="modal-salir-content">
+            <h3>¿Desea salir del sistema?</h3>
+            <p>Se cerrará su sesión actual.</p>
+            <div class="modal-salir-buttons">
+                <button class="btn-cancelar-salir" onclick="cancelarSalida()">CANCELAR</button>
+                <button class="btn-confirmar-salir" onclick="confirmarSalida()">SALIR</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="modalInactividad" class="modal-inactividad" style="display: none;">
+        <div class="modal-inactividad-content">
+            <i class="fas fa-clock"></i>
+            <h3>¿Sigue ahí?</h3>
+            <p>Su sesión se cerrará por inactividad en 
+                <strong><span id="inactividadCountdown">30</span> segundos</strong>.
+            </p>
+            <button class="btn btn-primary" onclick="continuarSesion()">CONTINUAR TRABAJANDO</button>
+        </div>
+    </div>
+
+    <div id="modalAyuda" class="modal-ayuda" style="display: none;">
+        <div class="modal-ayuda-content">
+            <div class="modal-ayuda-header">
+                <h3>Centro de Ayuda</h3>
+                <button class="close-modal" onclick="document.getElementById('modalAyuda').style.display='none'">&times;</button>
+            </div>
+            <div class="ayuda-content">
+                <h4>📋 Preguntas Frecuentes</h4>
+                <details><summary>¿Cuántos artículos puedo agregar?</summary><p>Máximo 6 artículos por Packing List.</p></details>
+                <details><summary>¿Cómo finalizo un artículo?</summary><p>Ingrese 0 en la cantidad para finalizar el artículo actual.</p></details>
+                <details><summary>¿Puedo pegar varias cantidades?</summary><p>Sí, copie y pegue números separados por espacios o comas.</p></details>
+                <details><summary>¿Cómo imprimo o genero PDF?</summary><p>Primero "GRABAR" la lista, luego seleccione "GENERAR PDF" o "IMPRIMIR".</p></details>
+                <h4 style="margin-top: 20px;">⌨️ Atajos de Teclado</h4>
+                <table class="shortcuts-table">
+                    <tr><td><kbd>Enter</kbd></td><td>Agregar artículo</td></tr>
+                    <tr><td><kbd>Ctrl</kbd>+<kbd>L</kbd></td><td>Limpiar lista</td></tr>
+                    <tr><td><kbd>Ctrl</kbd>+<kbd>G</kbd></td><td>Grabar lista</td></tr>
+                    <tr><td><kbd>Ctrl</kbd>+<kbd>P</kbd></td><td>Imprimir</td></tr>
+                    <tr><td><kbd>Esc</kbd></td><td>Cerrar modales</td></tr>
                 </table>
             </div>
-            
-            <div class="resumen-footer">
-                <span>TOTAL GENERAL</span>
-                <span id="resumenTotal">0.00</span>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <template id="toastTemplate">
+        <div class="toast">
+            <i class="toast-icon"></i>
+            <div class="toast-content">
+                <div class="toast-title"></div>
+                <div class="toast-message"></div>
             </div>
+            <button class="toast-close">&times;</button>
         </div>
-        
-        <div class="modal-grabar-buttons">
-            <button class="btn btn-editar" id="btnVolverEditar">VOLVER A EDITAR</button>
-            <button class="btn btn-pdf-grabar" id="btnGenerarPDF">GENERAR PDF</button>
-            <button class="btn btn-imprimir-grabar" id="btnImprimirGrabar">IMPRIMIR</button>
-        </div>
-    </div>
-</div>
+    </template>
 
-<!-- Modal de Confirmacion de Salida -->
-<div id="modalSalir" class="modal-salir" style="display: none;">
-    <div class="modal-salir-content">
-        <h3>¿Desea salir del sistema?</h3>
-        <p>Se cerrara su sesion actual.</p>
-        <div class="modal-salir-buttons">
-            <button class="btn-cancelar-salir" onclick="cancelarSalida()">CANCELAR</button>
-            <button class="btn-confirmar-salir" onclick="confirmarSalida()">SALIR</button>
-        </div>
-    </div>
-</div>
-
-<!-- Modal de Inactividad -->
-<div id="modalInactividad" class="modal-inactividad" style="display: none;">
-    <div class="modal-inactividad-content">
-        <i class="fas fa-clock"></i>
-        <h3>¿Sigue ahi?</h3>
-        <p>Su sesion se cerrara por inactividad en <strong><span id="inactividadCountdown">30</span> segundos</strong>.</p>
-        <button class="btn btn-primary" onclick="continuarSesion()" style="padding: 12px 25px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600;">CONTINUAR TRABAJANDO</button>
-    </div>
-</div>
-
-<script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
